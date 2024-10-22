@@ -1,0 +1,7 @@
+<h2>{% if form.instance.pk %}Edit Order Detail{% else %}New Order Detail{% endif %}</h2>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Save</button>
+</form>
+<a href="{% url 'order_detail_list' order_id %}">Back to Order Details</a>

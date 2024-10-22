@@ -44,17 +44,18 @@ def sale_detail_list(request, sale_id):
     return render(request, 'sale_detail_list.html', {'sale': sale, 'sale_details': sale_details})
 
 def sale_detail_create(request, sale_id):
-    sale = get_object_or_404(Sale, pk=sale_id)
+    sale_instance = get_object_or_404(Sale, pk=sale_id)
     if request.method == 'POST':
         form = SaleDetailForm(request.POST)
         if form.is_valid():
             sale_detail = form.save(commit=False)
-            sale_detail.SaleID = sale
+            sale_detail.SaleID = sale_instance
             sale_detail.save()
             return redirect('sale_detail_list', sale_id=sale_id)
     else:
         form = SaleDetailForm()
-    return render(request, 'sale_detail_form.html', {'form': form})
+    return render(request, 'sale_detail_form.html', {'form': form, 'sale_id': sale_id})
+
 
 def sale_detail_update(request, pk):
     sale_detail = get_object_or_404(SaleDetail, pk=pk)
@@ -62,10 +63,10 @@ def sale_detail_update(request, pk):
         form = SaleDetailForm(request.POST, instance=sale_detail)
         if form.is_valid():
             form.save()
-            return redirect('sale_detail_list', sale_detail.SaleID.pk)
+            return redirect('sale_detail_list', sale_id=sale_detail.SaleID.pk)
     else:
         form = SaleDetailForm(instance=sale_detail)
-    return render(request, 'sale_detail_form.html', {'form': form})
+    return render(request, 'sale_detail_form.html', {'form': form, 'sale_id': sale_detail.SaleID.pk})
 
 def sale_detail_delete(request, pk):
     sale_detail = get_object_or_404(SaleDetail, pk=pk)

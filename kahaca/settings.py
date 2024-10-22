@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     #custom apps
     'sales',
     'homepage',
+    'orders',
 ]
 
 MIDDLEWARE = [

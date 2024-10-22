@@ -4,4 +4,4 @@
     {{ form.as_p }}
     <button type="submit">Save</button>
 </form>
-<a href="{% url 'sale_detail_list' form.instance.SaleID.pk %}">Cancel</a>
+<a href="{% url 'sale_detail_list' sale_id %}">Back to Sale Details</a>

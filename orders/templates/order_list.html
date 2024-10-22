@@ -1,0 +1,11 @@
+<h2>Orders</h2>
+<a href="{% url 'order_create' %}">Add New Order</a>
+<ul>
+    {% for order in orders %}
+    <li>{{ order.OrderDate }} - ${{ order.TotalAmount }}
+        <a href="{% url 'order_update' order.pk %}">Edit</a> |
+        <a href="{% url 'order_delete' order.pk %}">Delete</a> |
+        <a href="{% url 'order_detail_list' order.pk %}">Details</a>
+    </li>
+    {% endfor %}
+</ul>
