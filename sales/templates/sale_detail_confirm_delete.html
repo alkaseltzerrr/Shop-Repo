@@ -1,0 +1,6 @@
+<h2>Are you sure you want to delete this sale detail?</h2>
+<form method="post">
+    {% csrf_token %}
+    <button type="submit">Confirm</button>
+</form>
+<a href="{% url 'sale_detail_list' sale_detail.SaleID.pk %}">Cancel</a>

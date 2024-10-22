@@ -1,0 +1,7 @@
+<h2>{% if form.instance.pk %}Edit Sale Detail{% else %}New Sale Detail{% endif %}</h2>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Save</button>
+</form>
+<a href="{% url 'sale_detail_list' form.instance.SaleID.pk %}">Cancel</a>

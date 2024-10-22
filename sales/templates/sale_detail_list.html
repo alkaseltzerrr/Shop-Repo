@@ -1,0 +1,11 @@
+<h2>Details for Sale on {{ sale.SaleDate }}</h2>
+<a href="{% url 'sale_detail_create' sale.pk %}">Add New Sale Detail</a>
+<ul>
+    {% for detail in sale_details %}
+    <li>{{ detail.Quantity }} x {{ detail.UnitPrice }} ({{ detail.PaymentType }})
+        <a href="{% url 'sale_detail_update' detail.pk %}">Edit</a> |
+        <a href="{% url 'sale_detail_delete' detail.pk %}">Delete</a>
+    </li>
+    {% endfor %}
+</ul>
+<a href="{% url 'sale_list' %}">Back to Sales</a>
