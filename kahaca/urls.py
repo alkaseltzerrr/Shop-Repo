@@ -25,4 +25,7 @@ urlpatterns = [
 
     path('', include('apps.orders.urls')),  # Include app URLs
 
+    path('', include('apps.em.urls')),
+    path('', include('apps.crm.urls')),
+
 ]

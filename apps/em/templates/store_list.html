@@ -1,0 +1,24 @@
+<!-- em/templates/em/store_list.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Store List</title>
+</head>
+<body>
+    <h2>Store List</h2>
+    <a href="{% url 'store_create' %}">Create New Store</a>
+    <ul>
+      {% for store in stores %}
+        <li>
+          {{ store.store_name }} - {{ store.store_address }} - {{ store.contact_information }}
+          <a href="{% url 'store_update' store.pk %}">Edit</a> |
+          <a href="{% url 'store_delete' store.pk %}">Delete</a>
+        </li>
+      {% empty %}
+        <p>No stores available.</p>
+      {% endfor %}
+    </ul>
+</body>
+</html>
