@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loyalty Program List</title>
+</head>
+<body>
+    <h2>Loyalty Program List</h2>
+    <a href="{% url 'loyaltyprogram_create' %}">Create New Loyalty Program</a>
+    <ul>
+      {% for loyaltyprogram in loyaltyprograms %}
+        <li>
+          {{ loyaltyprogram.loyaltytype }} - Points: {{ loyaltyprogram.pointsaccumulated }} - Customer: {{ loyaltyprogram.customer.customername }}
+          <a href="{% url 'loyaltyprogram_update' loyaltyprogram.pk %}">Edit</a> |
+          <a href="{% url 'loyaltyprogram_delete' loyaltyprogram.pk %}">Delete</a>
+        </li>
+      {% empty %}
+        <p>No loyalty programs available.</p>
+      {% endfor %}
+    </ul>
+</body>
+</html>
+
+

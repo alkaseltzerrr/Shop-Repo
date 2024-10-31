@@ -1,0 +1,24 @@
+<!-- crm/templates/crm/customer_list.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer List</title>
+</head>
+<body>
+    <h2>Customer List</h2>
+    <a href="{% url 'customer_create' %}">Create New Customer</a>
+    <ul>
+      {% for customer in customers %}
+        <li>
+          {{ customer.customername }} - {{ customer.contactinformation }} - Loyalty Points: {{ customer.loyaltypoints }}
+          <a href="{% url 'customer_update' customer.pk %}">Edit</a> |
+          <a href="{% url 'customer_delete' customer.pk %}">Delete</a>
+        </li>
+      {% empty %}
+        <p>No customers available.</p>
+      {% endfor %}
+    </ul>
+</body>
+</html>

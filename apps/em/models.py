@@ -1,0 +1,35 @@
+from django.db import models
+
+class Owner(models.Model):
+    owner_id = models.AutoField(primary_key=True)
+    full_name = models.CharField(max_length=50)
+    contact_information = models.CharField(max_length=50)
+    password = models.CharField(max_length=50)
+    email_id = models.CharField(max_length=50)
+
+    def __str__(self):
+        return self.full_name
+
+
+class Store(models.Model):
+    store_id = models.AutoField(primary_key=True)
+    store_name = models.CharField(max_length=50)
+    store_address = models.CharField(max_length=50)
+    contact_information = models.CharField(max_length=50)
+    owner = models.ForeignKey(Owner, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.store_name
+
+
+class Employee(models.Model):
+    employee_id = models.AutoField(primary_key=True)
+    first_name = models.CharField(max_length=50)
+    last_name = models.CharField(max_length=50)
+    role = models.CharField(max_length=50)
+    email = models.CharField(max_length=50)
+    gender = models.CharField(max_length=10)
+    age = models.IntegerField()
+
+    def __str__(self):
+        return f"{self.first_name} {self.last_name}"

@@ -1,0 +1,7 @@
+<h2>Delete Owner</h2>
+<p>Are you sure you want to delete "{{ owner.full_name }}"?</p>
+<form method="POST">
+    {% csrf_token %}
+    <button type="submit">Yes, Delete</button>
+    <a href="{% url 'owner_list' %}">Cancel</a>
+</form>

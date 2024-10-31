@@ -1,0 +1,10 @@
+<h2>Owner List</h2>
+<a href="{% url 'owner_create' %}">Add New Owner</a>
+<ul>
+    {% for owner in owners %}
+        <li>{{ owner.full_name }}
+            <a href="{% url 'owner_update' owner.pk %}">Edit</a>
+            <a href="{% url 'owner_delete' owner.pk %}">Delete</a>
+        </li>
+    {% endfor %}
+</ul>
