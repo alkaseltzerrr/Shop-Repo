@@ -1,0 +1,22 @@
+<h1>Inventory List</h1>
+<table>
+    <tr>
+        <th>Product</th>
+        <th>Quantity</th>
+        <th>Last Update</th>
+        <th>Actions</th>
+    </tr>
+    {% for inventory in inventory %}
+    <tr>
+        <td>{{ inventory.productID.productName }}</td>
+        <td>{{ inventory.quantity }}</td>
+        <td>{{ inventory.lastUpdate }}</td>
+        <td>
+            <a href="{% url 'inventory_update' inventory.pk %}">Edit</a>
+            <a href="{% url 'inventory_delete' inventory.pk %}">Delete</a>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+<a href="{% url 'inventory_create' %}">Add New Inventory</a>
+<a href="{% url 'home' %}">Go to Homepage</a> <!-- Updated URL name -->

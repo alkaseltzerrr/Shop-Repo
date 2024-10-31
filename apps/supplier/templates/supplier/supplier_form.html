@@ -1,0 +1,9 @@
+<!-- supplier_form.html -->
+<h1>{% if form.instance.pk %}Edit{% else %}Add{% endif %} Supplier</h1>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Save</button>
+    <a href="{% url 'supplier_list' %}">Cancel</a>
+</form>
+<!-- End of snippet from inventory-product/supplier/templates/supplier/supplier_form.html -->

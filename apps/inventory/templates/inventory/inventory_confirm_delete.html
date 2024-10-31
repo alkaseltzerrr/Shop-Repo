@@ -1,0 +1,6 @@
+<h1>Are you sure you want to delete inventory for "{{ inventory.productID.productName }}"?</h1>
+<form method="post">
+    {% csrf_token %}
+    <button type="submit">Confirm</button>
+</form>
+<a href="{% url 'inventory_list' %}">Cancel</a>

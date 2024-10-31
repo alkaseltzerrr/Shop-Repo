@@ -44,6 +44,8 @@ INSTALLED_APPS = [
     'apps.orders',
     'apps.em',
     'apps.crm',
+    'apps.inventory', #carl
+    'apps.supplier', #carl
 ]
 
 MIDDLEWARE = [
@@ -90,7 +92,7 @@ DATABASES = {
      #       'ENGINE': 'django.db.backends.mysql',
       #      'NAME': 'imkahaca',
        #     'USER': 'root',
-        #    'PASSWORD': 'jankan',
+        #    'PASSWORD': 'carl',
          #   'HOST': 'localhost',  # Set to the database server's IP address or hostname
           #  'PORT': '3306',       # Default MySQL port
         #}

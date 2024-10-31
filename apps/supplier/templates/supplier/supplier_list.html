@@ -1,0 +1,12 @@
+<!-- supplier_list.html -->
+<h1>Supplier List</h1>
+<a href="{% url 'supplier_create' %}">Add New Supplier</a>
+<ul>
+    {% for supplier in suppliers %}
+        <li>
+            {{ supplier.SupplierName }} - {{ supplier.ContactInformation }} - {{ supplier.Address }}
+            <a href="{% url 'supplier_update' supplier.SupplierID %}">Edit</a>
+            <a href="{% url 'supplier_delete' supplier.SupplierID %}">Delete</a>
+        </li>
+    {% endfor %}
+</ul>

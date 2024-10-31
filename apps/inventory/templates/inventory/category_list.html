@@ -1,0 +1,19 @@
+<h1>Category List</h1>
+<table>
+    <tr>
+        <th>ID</th>
+        <th>Category Name</th>
+        <th>Actions</th>
+    </tr>
+    {% for category in categories %}
+    <tr>
+        <td>{{ category.categoryID }}</td>
+        <td>{{ category.categoryName }}</td>
+        <td>
+            <a href="{% url 'category_update' category.pk %}">Edit</a>
+            <a href="{% url 'category_delete' category.pk %}">Delete</a>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+<a href="{% url 'category_create' %}">Add New Category</a>
