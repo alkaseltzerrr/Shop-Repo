@@ -1,22 +1,81 @@
-<h1>Inventory List</h1>
-<table>
-    <tr>
-        <th>Product</th>
-        <th>Quantity</th>
-        <th>Last Update</th>
-        <th>Actions</th>
-    </tr>
-    {% for inventory in inventory %}
-    <tr>
-        <td>{{ inventory.productID.productName }}</td>
-        <td>{{ inventory.quantity }}</td>
-        <td>{{ inventory.lastUpdate }}</td>
-        <td>
-            <a href="{% url 'inventory_update' inventory.pk %}">Edit</a>
-            <a href="{% url 'inventory_delete' inventory.pk %}">Delete</a>
-        </td>
-    </tr>
-    {% endfor %}
-</table>
-<a href="{% url 'inventory_create' %}">Add New Inventory</a>
-<a href="{% url 'home' %}">Go to Homepage</a> <!-- Updated URL name -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory List</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        h1 {
+            color: #333;
+        }
+        table {
+            width: 80%;
+            max-width: 600px;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            background: #f4f4f9;
+        }
+        a {
+            text-decoration: none;
+            color: #007BFF;
+            margin-left: 10px;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .add-inventory, .home-button {
+            background: #007BFF;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            margin-top: 20px;
+        }
+        .add-inventory:hover, .home-button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Inventory List</h1>
+    <table>
+        <tr>
+            <th>Product</th>
+            <th>Quantity</th>
+            <th>Last Update</th>
+            <th>Actions</th>
+        </tr>
+        {% for inventory in inventory %}
+        <tr>
+            <td>{{ inventory.productID.productName }}</td>
+            <td>{{ inventory.quantity }}</td>
+            <td>{{ inventory.lastUpdate }}</td>
+            <td>
+                <a href="{% url 'inventory_update' inventory.pk %}">Edit</a>
+                <a href="{% url 'inventory_delete' inventory.pk %}">Delete</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+    <a class="add-inventory" href="{% url 'inventory_create' %}">Add New Inventory</a>
+    <a class="home-button" href="{% url 'home' %}">Go to Homepage</a>
+</body>
+</html>

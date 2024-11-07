@@ -1,7 +1,47 @@
-<h1>Delete Product</h1>
-<p>Are you sure you want to delete "{{ product.productName }}"?</p>
-<form method="post">
-    {% csrf_token %}
-    <button type="submit">Yes, Delete</button>
-</form>
-<a href="{% url 'product_list' %}">Cancel</a>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delete Product</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        h1 {
+            color: #333;
+        }
+        form, a {
+            margin-top: 20px;
+        }
+        button, a {
+            background: #007BFF;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            margin: 5px;
+        }
+        button:hover, a:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Delete Product</h1>
+    <p>Are you sure you want to delete "{{ product.productName }}"?</p>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit">Yes, Delete</button>
+    </form>
+    <a href="{% url 'product_list' %}">Cancel</a>
+</body>
+</html>
