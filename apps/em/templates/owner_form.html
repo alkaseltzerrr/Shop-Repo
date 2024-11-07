@@ -1,6 +1,24 @@
-<h2>{{ form.instance.pk|yesno:"Edit Owner,Create Owner" }}</h2>
-<form method="POST">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Save</button>
-</form>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create/Update Owner</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h2 { color: #5bc0de; }
+        form { margin-bottom: 20px; }
+        button, a { padding: 10px 20px; text-decoration: none; }
+        button { background-color: #5cb85c; color: white; border: none; cursor: pointer; }
+        a { background-color: #5bc0de; color: white; }
+    </style>
+</head>
+<body>
+    <h2>{{ form.instance.pk|yesno:"Edit Owner,Create Owner" }}</h2>
+    <form method="POST">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Save</button>
+    </form>
+</body>
+</html>
