@@ -1,7 +1,20 @@
-<h2>{% if form.instance.pk %}Edit Sale Detail{% else %}New Sale Detail{% endif %}</h2>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Save</button>
-</form>
-<a href="{% url 'sale_detail_list' sale_id %}">Back to Sale Details</a>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if form.instance.pk %}Edit Sale Detail{% else %}New Sale Detail{% endif %}</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container my-4">
+    <h2>{% if form.instance.pk %}Edit Sale Detail{% else %}New Sale Detail{% endif %}</h2>
+    <form method="post" class="border p-4 bg-light">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-success">Save</button>
+        <a href="{% url 'sale_detail_list' sale_id %}" class="btn btn-secondary">Back to Sale Details</a>
+    </form>
+</div>
+</body>
+</html>

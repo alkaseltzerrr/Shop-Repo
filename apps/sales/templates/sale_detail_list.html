@@ -1,11 +1,29 @@
-<h2>Details for Sale on {{ sale.SaleDate }}</h2>
-<a href="{% url 'sale_detail_create' sale.pk %}">Add New Sale Detail</a>
-<ul>
-    {% for detail in sale_details %}
-    <li>{{ detail.Quantity }} x {{ detail.UnitPrice }} ({{ detail.PaymentType }})
-        <a href="{% url 'sale_detail_update' detail.pk %}">Edit</a> |
-        <a href="{% url 'sale_detail_delete' detail.pk %}">Delete</a>
-    </li>
-    {% endfor %}
-</ul>
-<a href="{% url 'sale_list' %}">Back to Sales</a>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sale Details</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container my-4">
+    <h2>Details for Sale on {{ sale.SaleDate }}</h2>
+    <a href="{% url 'sale_detail_create' sale.pk %}" class="btn btn-primary mb-3">Add New Sale Detail</a>
+    <ul class="list-group">
+        {% for detail in sale_details %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                    {{ detail.Quantity }} x ${{ detail.UnitPrice }} ({{ detail.PaymentType }}) - {{ detail.ProductID.productName }}
+                </div>
+                <div>
+                    <a href="{% url 'sale_detail_update' detail.pk %}" class="btn btn-sm btn-warning mr-2">Edit</a>
+                    <a href="{% url 'sale_detail_delete' detail.pk %}" class="btn btn-sm btn-danger">Delete</a>
+                </div>
+            </li>
+        {% endfor %}
+    </ul>
+    <a href="{% url 'sale_list' %}" class="btn btn-secondary mt-3">Back to Sales</a>
+</div>
+</body>
+</html>
