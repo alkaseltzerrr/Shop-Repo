@@ -1,9 +1,7 @@
-# orders/urls.py
 from django.urls import path
 from . import views
 
 urlpatterns = [
-    # Order URLs
     path('orders/', views.order_list, name='order_list'),
     path('orders/new/', views.order_create, name='order_create'),
     path('orders/<int:pk>/edit/', views.order_update, name='order_update'),

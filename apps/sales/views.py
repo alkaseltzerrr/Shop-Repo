@@ -2,7 +2,6 @@ from django.shortcuts import render, get_object_or_404, redirect
 from .models import Sale, SaleDetail
 from .forms import SaleForm, SaleDetailForm
 
-# CRUD for Sale
 
 def sale_list(request):
     sales = Sale.objects.all()

@@ -2,7 +2,6 @@ from django.shortcuts import render, get_object_or_404, redirect
 from .models import order, orderDetail
 from .forms import OrderForm, OrderDetailForm
 
-# CRUD for Order
 
 def order_list(request):
     orders = order.objects.all()
