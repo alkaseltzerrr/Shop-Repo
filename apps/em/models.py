@@ -1,14 +1,34 @@
 from django.db import models
+from django.contrib.auth.hashers import make_password, check_password
+
 
 class Owner(models.Model):
     owner_id = models.AutoField(primary_key=True)
     full_name = models.CharField(max_length=50)
     contact_information = models.CharField(max_length=50)
-    password = models.CharField(max_length=50)
-    email_id = models.CharField(max_length=50)
+    password = models.CharField(max_length=128)  # Increased length to store hashed password
+    email_id = models.CharField(max_length=50, unique=True)
+
+    def save(self, *args, **kwargs):
+        # Hash the password only if it's not already hashed
+        if not self.password.startswith('pbkdf2_'):
+            self.password = make_password(self.password)
+        super().save(*args, **kwargs)
+
+    def check_password(self, raw_password):
+        # Compare the provided password with the stored hashed password
+        return check_password(raw_password, self.password)
 
     def __str__(self):
         return self.full_name
+
+    def to_dict(self):
+        return {
+            'owner_id': self.owner_id,
+            'full_name': self.full_name,
+            'contact_information': self.contact_information,
+            'email_id': self.email_id,
+        }
 
 
 class Store(models.Model):

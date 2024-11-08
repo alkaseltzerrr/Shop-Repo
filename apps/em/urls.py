@@ -2,6 +2,9 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+
+    #path('login/', views.owner_login, name='owner_login'),
+
     path('owners/', views.owner_list, name='owner_list'),
     path('owners/create/', views.owner_create, name='owner_create'),
     path('owners/<int:pk>/edit/', views.owner_update, name='owner_update'),

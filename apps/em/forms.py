@@ -18,3 +18,7 @@ class EmployeeForm(forms.ModelForm):
     class Meta:
         model = Employee
         fields = ['first_name', 'last_name', 'role', 'email', 'gender', 'age']
+
+# class LoginForm(forms.Form):  # Changed from ModelForm to Form
+#     email_id = forms.EmailField()
+#     password = forms.CharField(widget=forms.PasswordInput)
