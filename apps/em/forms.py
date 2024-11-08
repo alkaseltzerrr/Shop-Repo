@@ -1,10 +1,24 @@
 from django import forms
+from django.contrib.auth.hashers import make_password
+
+
+
 from .models import Owner, Store, Employee
 
 class OwnerForm(forms.ModelForm):
     class Meta:
         model = Owner
         fields = ['full_name', 'contact_information', 'password', 'email_id']
+
+    password = forms.CharField(widget=forms.PasswordInput, label='Password', required=False)
+
+    def save(self, commit=True):
+        owner = super().save(commit=False)
+        if self.cleaned_data['password']:  # Only update password if provided
+            owner.password = make_password(self.cleaned_data['password'])
+        if commit:
+            owner.save()
+        return owner
 
 
 class StoreForm(forms.ModelForm):
@@ -19,6 +33,7 @@ class EmployeeForm(forms.ModelForm):
         model = Employee
         fields = ['first_name', 'last_name', 'role', 'email', 'gender', 'age']
 
-# class LoginForm(forms.Form):  # Changed from ModelForm to Form
-#     email_id = forms.EmailField()
-#     password = forms.CharField(widget=forms.PasswordInput)
+
+class LoginForm(forms.Form):
+    email = forms.CharField(max_length=50, label='Email')
+    password = forms.CharField(widget=forms.PasswordInput, label='Password')

@@ -4,7 +4,11 @@ from . import forms
 from .models import Owner, Store, Employee
 from .forms import OwnerForm, StoreForm, EmployeeForm #, LoginForm
 from django.db import IntegrityError
-
+from django.shortcuts import render, redirect
+from django.contrib.auth import authenticate, login
+from django.contrib import messages
+from django.contrib.auth.hashers import check_password
+from .forms import LoginForm
 
 # -------------- OWNER CRUD ----------------
 def owner_list(request):
@@ -113,3 +117,26 @@ def employee_delete(request, pk):
     return render(request, 'employee_confirm_delete.html', {'employee': employee})
 
 # -------------- Log in ----------------
+def owner_login(request):
+    if request.method == 'POST':
+        form = LoginForm(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data['email']
+            password = form.cleaned_data['password']
+
+            try:
+                owner = Owner.objects.get(email_id=email)
+            except Owner.DoesNotExist:
+                owner = None
+
+            # Check if owner exists and the password is correct
+            if owner and check_password(password, owner.password):
+                # Perform login
+                request.session['owner_id'] = owner.owner_id  # Store owner in session
+                messages.success(request, "Login successful!")
+                return redirect('home')  # Redirect to owner's list or any other page
+            else:
+                messages.error(request, "Invalid email or password.")
+    else:
+        form = LoginForm()
+    return render(request, 'login.html', {'form': form})
