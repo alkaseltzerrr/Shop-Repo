@@ -15,9 +15,12 @@
 </head>
 <body>
     <h2>{{ form.instance.pk|yesno:"Edit Owner,Create Owner" }}</h2>
-    <form method="POST">
+    <form method="POST" enctype="multipart/form-data">  <!-- Add enctype for file upload -->
         {% csrf_token %}
         {{ form.as_p }}
+        {% if form.instance.profile_picture %}
+            <img src="{{ form.instance.profile_picture.url }}" alt="Profile Picture" style="max-width: 200px; max-height: 200px;"/>
+        {% endif %}
         <button type="submit">Save</button>
     </form>
 </body>

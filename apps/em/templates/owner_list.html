@@ -18,7 +18,8 @@
     <a href="{% url 'owner_create' %}">Add New Owner</a>
     <ul>
         {% for owner in owners %}
-            <li>{{ owner.full_name }}
+            <li>
+                {{ owner.full_name }}
                 <a href="{% url 'owner_update' owner.owner_id %}">Edit</a>
                 <a href="{% url 'owner_delete' owner.owner_id %}">Delete</a>
             </li>

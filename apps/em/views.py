@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 
 from . import forms
 from .models import Owner, Store, Employee
-from .forms import OwnerForm, StoreForm, EmployeeForm #, LoginForm
+from .forms import OwnerForm, StoreForm, EmployeeForm, RegisterOwnerForm  # , LoginForm
 from django.db import IntegrityError
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login
@@ -18,7 +18,7 @@ def owner_list(request):
 
 def owner_create(request):
     if request.method == 'POST':
-        form = OwnerForm(request.POST)
+        form = OwnerForm(request.POST, request.FILES)  # Add `request.FILES` to handle file uploads
         if form.is_valid():
             try:
                 form.save()
@@ -32,7 +32,7 @@ def owner_create(request):
 def owner_update(request, pk):
     owner = get_object_or_404(Owner, pk=pk)
     if request.method == 'POST':
-        form = OwnerForm(request.POST, instance=owner)
+        form = OwnerForm(request.POST, request.FILES, instance=owner)  # Add `request.FILES` here too
         if form.is_valid():
             try:
                 form.save()
@@ -140,3 +140,27 @@ def owner_login(request):
     else:
         form = LoginForm()
     return render(request, 'login.html', {'form': form})
+
+def owner_register(request):
+    if request.method == 'POST':
+        form = RegisterOwnerForm(request.POST)
+        if form.is_valid():
+            owner = Owner(
+                full_name=form.cleaned_data['full_name'],
+                contact_information=form.cleaned_data['contact_information'],
+                password=form.cleaned_data['password'],
+                email_id=form.cleaned_data['email_id'],
+                profile_picture=form.cleaned_data.get('profile_picture')
+            )
+            owner.save()
+            store = Store(
+                store_name=form.cleaned_data['store_name'],
+                store_address=form.cleaned_data['store_address'],
+                contact_information=form.cleaned_data['store_contact_information'],
+                owner=owner
+            )
+            store.save()
+            return redirect('login')
+    else:
+        form = RegisterOwnerForm()
+    return render(request, 'RegisterOwner.html', {'form': form})
