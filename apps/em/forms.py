@@ -29,7 +29,7 @@ class StoreForm(forms.ModelForm):
 class EmployeeForm(forms.ModelForm):
     class Meta:
         model = Employee
-        fields = ['first_name', 'last_name', 'role', 'email', 'gender', 'age']
+        fields = ['first_name', 'last_name', 'role', 'email', 'gender', 'age', 'store_id']
 
 
 class LoginForm(forms.Form):
