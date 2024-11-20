@@ -18,7 +18,7 @@ def owner_list(request):
 
 def owner_create(request):
     if request.method == 'POST':
-        form = OwnerForm(request.POST, request.FILES)  # Add `request.FILES` to handle file uploads
+        form = OwnerForm(request.POST, request.FILES)
         if form.is_valid():
             try:
                 form.save()
@@ -32,7 +32,7 @@ def owner_create(request):
 def owner_update(request, pk):
     owner = get_object_or_404(Owner, pk=pk)
     if request.method == 'POST':
-        form = OwnerForm(request.POST, request.FILES, instance=owner)  # Add `request.FILES` here too
+        form = OwnerForm(request.POST, request.FILES, instance=owner)
         if form.is_valid():
             try:
                 form.save()
@@ -134,6 +134,7 @@ def owner_login(request):
                 # Perform login
                 request.session['owner_id'] = owner.owner_id  # Store owner in session
                 messages.success(request, "Login successful!")
+                messages.success(request, f"Welcome, {owner.full_name}!")
                 return redirect('home')  # Redirect to owner's list or any other page
             else:
                 messages.error(request, "Invalid email or password.")
@@ -150,7 +151,6 @@ def owner_register(request):
                 contact_information=form.cleaned_data['contact_information'],
                 password=form.cleaned_data['password'],
                 email_id=form.cleaned_data['email_id'],
-                profile_picture=form.cleaned_data.get('profile_picture')
             )
             owner.save()
             store = Store(

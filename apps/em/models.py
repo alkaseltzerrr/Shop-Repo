@@ -48,6 +48,7 @@ class Employee(models.Model):
     email = models.CharField(max_length=50)
     gender = models.CharField(max_length=10)
     age = models.IntegerField()
+    store_id = models.ForeignKey(Store, on_delete=models.DO_NOTHING, related_name='employees',null=False,blank=False)
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"

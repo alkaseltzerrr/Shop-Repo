@@ -44,4 +44,3 @@ class RegisterOwnerForm(forms.Form):
     store_name = forms.CharField(max_length=50)
     store_address = forms.CharField(max_length=50)
     store_contact_information = forms.CharField(max_length=50)
-    profile_picture = forms.ImageField(required=True)
