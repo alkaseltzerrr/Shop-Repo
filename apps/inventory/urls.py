@@ -22,4 +22,6 @@ urlpatterns = [
     path('inventory/<int:pk>/edit/', views.inventory_update, name='inventory_update'),
     path('inventory/<int:pk>/delete/', views.inventory_delete, name='inventory_delete'),
 
+    # Near Expiry URLs
+    path('near-expiry/', views.near_expiry, name='near_expiry'),
 ]

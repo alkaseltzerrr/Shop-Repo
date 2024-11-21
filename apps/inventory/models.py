@@ -29,7 +29,7 @@ class Product(models.Model):
 class Inventory(models.Model):
     inventoryID = models.AutoField(primary_key=True)  # Auto-incrementing ID
     productID = models.ForeignKey(Product, on_delete=models.CASCADE)  # Foreign key to Product
-    quantity = models.DecimalField(max_digits=10, decimal_places=2)  # Decimal for quantity
+    quantity = models.IntegerField()  # Change to IntegerField for quantity
     lastUpdate = models.DateField(default=timezone.now)  # Date for last update, with default to current date
 
     def __str__(self):
