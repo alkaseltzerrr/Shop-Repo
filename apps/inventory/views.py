@@ -81,7 +81,17 @@ def category_delete(request, pk):
 # Inventory views
 def inventory_list(request):
     inventory = Inventory.objects.all()
-    return render(request, 'inventory/inventory_list.html', {'inventory': inventory})
+    inventory_data = []
+
+    for item in inventory:
+        inventory_data.append({
+            'pk': item.pk,
+            'productName': item.productID.productName,
+            'quantity': item.quantity,
+            'price': item.productID.price
+        })
+
+    return render(request, 'inventory/inventory_list.html', {'inventory_data': inventory_data})
 
 def inventory_create(request):
     if request.method == 'POST':
