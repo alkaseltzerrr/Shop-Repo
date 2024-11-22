@@ -56,29 +56,3 @@ def supplier_product_create(request):
         'supplier_form': supplier_form,
         'product_form': product_form
     })
-
-#transaction
-def buy_view(request):
-    if request.method == 'POST':
-        supplier_form = SupplierForm(request.POST)
-        product_form = ProductForm(request.POST)
-        if supplier_form.is_valid() and product_form.is_valid():
-            supplier = supplier_form.save()
-            product = product_form.save(commit=False)
-            product.supplier = supplier
-            product.save()
-
-            # Create Sale and SaleDetail
-            sale = Sale.objects.create(SaleDate=date.today(), Employee=request.user.employee, Customer=None,
-                                       TotalAmount=product.price)
-            SaleDetail.objects.create(SaleID=sale, ProductID=product, Quantity=1, UnitPrice=product.price,
-                                      PaymentType='Buy')
-
-            return redirect('history')
-    else:
-        supplier_form = SupplierForm()
-        product_form = ProductForm()
-    return render(request, 'supplier/supplier_product_form.html', {
-        'supplier_form': supplier_form,
-        'product_form': product_form
-    })

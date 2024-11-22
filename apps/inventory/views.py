@@ -5,8 +5,6 @@ from django.shortcuts import render, get_object_or_404, redirect
 from .models import Product, Inventory, Category
 from .forms import ProductForm, InventoryForm, CategoryForm
 from datetime import date
-from apps.sales.models import SaleDetail
-from .forms import CustomerForm, ProductForm, SupplierForm
 
 # Product Views
 # READ: List all products
@@ -144,8 +142,3 @@ def near_expiry(request):
         })
 
     return render(request, 'inventory/near_expiry.html', {'near_expiry_data': near_expiry_data})
-
-#===================================================================================================================
-# Buy, Sell and History views
-# apps/inventory/views.py
-

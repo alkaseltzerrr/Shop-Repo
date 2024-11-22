@@ -86,7 +86,8 @@ def store_delete(request, pk):
 # -------------- EMPLOYEE CRUD ----------------
 def employee_list(request):
     employees = Employee.objects.all()
-    return render(request, 'employee_list.html', {'employees': employees})
+    form = EmployeeForm()
+    return render(request, 'employee_list.html', {'employees': employees, 'form': form})
 
 def employee_create(request):
     if request.method == 'POST':

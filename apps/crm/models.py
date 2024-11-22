@@ -5,7 +5,6 @@ class Customer(models.Model):
     customername = models.CharField(max_length=100)
     contactinformation = models.TextField()
     loyaltypoints = models.DecimalField(max_digits=10, decimal_places=2)
-    Address = models.CharField(max_length=255)
 
     def __str__(self):
         return self.customername

@@ -1,7 +1,5 @@
 from django import forms
 from .models import Product, Inventory, Category
-from apps.crm.models import Customer
-from apps.supplier.models import Supplier
 
 # Form for Product
 class ProductForm(forms.ModelForm):
@@ -23,15 +21,3 @@ class InventoryForm(forms.ModelForm):
     class Meta:
         model = Inventory
         fields = ['productID', 'quantity', 'lastUpdate', 'categoryID', 'price']
-
-# Form for Customer
-class CustomerForm(forms.ModelForm):
-    class Meta:
-        model = Customer
-        fields = ['customername', 'contactinformation', 'Address']
-
-# Form for Supplier
-class SupplierForm(forms.ModelForm):
-    class Meta:
-        model = Supplier
-        fields = ['SupplierName', 'ContactInformation', 'Address']

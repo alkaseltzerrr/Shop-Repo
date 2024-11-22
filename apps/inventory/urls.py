@@ -24,7 +24,4 @@ urlpatterns = [
 
     # Near Expiry URLs
     path('near-expiry/', views.near_expiry, name='near_expiry'),
-
-
-
 ]

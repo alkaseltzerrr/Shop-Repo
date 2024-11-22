@@ -74,33 +74,3 @@ def sale_detail_delete(request, pk):
         sale_detail.delete()
         return redirect('sale_detail_list', sale_id=sale_id)
     return render(request, 'sale_detail_confirm_delete.html', {'sale_detail': sale_detail})
-
-#transaction
-
-def sell_view(request):
-    if request.method == 'POST':
-        customer_form = CustomerForm(request.POST)
-        product_form = ProductForm(request.POST)
-        if customer_form.is_valid() and product_form.is_valid():
-            customer = customer_form.save()
-            product = product_form.save(commit=False)
-            product.save()
-
-            # Create Sale and SaleDetail
-            sale = Sale.objects.create(SaleDate=date.today(), Employee=request.user.employee, Customer=customer,
-                                       TotalAmount=product.price)
-            SaleDetail.objects.create(SaleID=sale, ProductID=product, Quantity=1, UnitPrice=product.price,
-                                      PaymentType='Sell')
-
-            return redirect('history')
-    else:
-        customer_form = CustomerForm()
-        product_form = ProductForm()
-    return render(request, 'inventory/../sales/templates/transaction_sell.html', {
-        'customer_form': customer_form,
-        'product_form': product_form
-    })
-
-def history_view(request):
-    transactions = SaleDetail.objects.all()
-    return render(request, 'inventory/../sales/templates/transaction_history.html', {'transactions': transactions})

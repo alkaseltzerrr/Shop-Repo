@@ -9,9 +9,4 @@ urlpatterns = [
     path('delete/<int:pk>/', views.supplier_delete, name='supplier_delete'),
 
     path('supplier_product_form/', supplier_product_create, name='supplier_product_form'),
-
-
-
-    path('buy/', views.buy_view, name='buy'),
-
 ]

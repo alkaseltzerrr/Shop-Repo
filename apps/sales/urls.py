@@ -13,10 +13,4 @@ urlpatterns = [
     path('sales/<int:sale_id>/details/new/', views.sale_detail_create, name='sale_detail_create'),
     path('details/<int:pk>/edit/', views.sale_detail_update, name='sale_detail_update'),
     path('details/<int:pk>/delete/', views.sale_detail_delete, name='sale_detail_delete'),
-
-    # Sale Report URLs
-    path('sell/', views.sell_view, name='sell'),
-    path('history/', views.history_view, name='history'),
-
-
 ]

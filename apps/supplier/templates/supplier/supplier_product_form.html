@@ -8,16 +8,15 @@
 <div class="p-8">
     <h1 class="text-3xl font-bold mb-8">Transactions</h1>
 
-    <!--Navigation-->
     <div class="mb-6 border-b">
         <nav class="flex gap-8">
-            <a href="{% url 'buy' %}" class="pb-4 {% if request.path == '/buy/' %}text-blue-600 border-b-2 border-blue-600 font-medium{% else %}text-gray-500 hover:text-blue-600{% endif %}">
+            <a href="#" class="pb-4 text-blue-600 border-b-2 border-blue-600 font-medium">
                 Buy
             </a>
-            <a href="{% url 'sell' %}" class="pb-4 {% if request.path == '/sell/' %}text-blue-600 border-b-2 border-blue-600 font-medium{% else %}text-gray-500 hover:text-blue-600{% endif %}">
+            <a href="#" class="pb-4 text-gray-500 hover:text-gray-700">
                 Sell
             </a>
-            <a href="{% url 'history' %}" class="pb-4 {% if request.path == '/history/' %}text-blue-600 border-b-2 border-blue-600 font-medium{% else %}text-gray-500 hover:text-blue-600{% endif %}">
+            <a href="#" class="pb-4 text-gray-500 hover:text-gray-700">
                 History
             </a>
         </nav>
