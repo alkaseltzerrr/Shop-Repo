@@ -27,6 +27,13 @@ class StoreForm(forms.ModelForm):
 
 
 class EmployeeForm(forms.ModelForm):
+    GENDER_CHOICES = [
+        ('Male', 'Male'),
+        ('Female', 'Female'),
+        ('Other', 'Other'),
+    ]
+
+    gender = forms.ChoiceField(choices=GENDER_CHOICES)
     class Meta:
         model = Employee
         fields = ['first_name', 'last_name', 'role', 'email', 'gender', 'age', 'store_id']
