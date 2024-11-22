@@ -20,5 +20,7 @@ urlpatterns = [
     path('employees/<int:pk>/delete/', views.employee_delete, name='employee_delete'),
 
     path('login/', views.owner_login, name='login'),
+
+    path('register/', views.owner_register, name='RegisterOwner'),
 ]
 

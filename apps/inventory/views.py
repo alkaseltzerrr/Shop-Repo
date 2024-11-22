@@ -4,6 +4,9 @@ from django.shortcuts import render
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Product, Inventory, Category
 from .forms import ProductForm, InventoryForm, CategoryForm
+from datetime import date
+from apps.sales.models import SaleDetail
+from .forms import CustomerForm, ProductForm, SupplierForm
 
 # Product Views
 # READ: List all products
@@ -81,7 +84,18 @@ def category_delete(request, pk):
 # Inventory views
 def inventory_list(request):
     inventory = Inventory.objects.all()
-    return render(request, 'inventory/inventory_list.html', {'inventory': inventory})
+    inventory_data = []
+
+    for item in inventory:
+        inventory_data.append({
+            'pk': item.pk,
+            'productName': item.productID.productName,
+            'quantity': item.quantity,
+            'price': item.productID.price
+        })
+
+    form = InventoryForm()  # Add this line to pass the form to the template
+    return render(request, 'inventory/inventory_list.html', {'inventory_data': inventory_data, 'form': form})
 
 def inventory_create(request):
     if request.method == 'POST':
@@ -111,4 +125,27 @@ def inventory_delete(request, pk):
         return redirect('inventory_list')
     return render(request, 'inventory/inventory_confirm_delete.html', {'inventory': inventory})
 
+# Expiry classes
+
+
+def near_expiry(request):
+    inventory = Inventory.objects.all()
+    near_expiry_data = []
+
+    for item in inventory:
+        days_left = (item.productID.expireyDate - date.today()).days
+        if days_left < 0:
+            days_left = "expired"
+        near_expiry_data.append({
+            'productID': item.productID.productID,
+            'productName': item.productID.productName,
+            'quantity': item.quantity,
+            'days_left': days_left
+        })
+
+    return render(request, 'inventory/near_expiry.html', {'near_expiry_data': near_expiry_data})
+
+#===================================================================================================================
+# Buy, Sell and History views
+# apps/inventory/views.py
 

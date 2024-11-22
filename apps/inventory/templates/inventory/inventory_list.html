@@ -1,81 +1,90 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inventory List</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-        h1 {
-            color: #333;
-        }
-        table {
-            width: 80%;
-            max-width: 600px;
-            border-collapse: collapse;
-            margin: 20px 0;
-        }
-        th, td {
-            padding: 10px;
-            border: 1px solid #ddd;
-            text-align: left;
-        }
-        th {
-            background: #f4f4f9;
-        }
-        a {
-            text-decoration: none;
-            color: #007BFF;
-            margin-left: 10px;
-        }
-        a:hover {
-            text-decoration: underline;
-        }
-        .add-inventory, .home-button {
-            background: #007BFF;
-            color: #fff;
-            padding: 10px 20px;
-            border-radius: 5px;
-            text-decoration: none;
-            margin-top: 20px;
-        }
-        .add-inventory:hover, .home-button:hover {
-            background: #0056b3;
-        }
-    </style>
-</head>
-<body>
-    <h1>Inventory List</h1>
-    <table>
-        <tr>
-            <th>Product</th>
-            <th>Quantity</th>
-            <th>Last Update</th>
-            <th>Actions</th>
-        </tr>
-        {% for inventory in inventory %}
-        <tr>
-            <td>{{ inventory.productID.productName }}</td>
-            <td>{{ inventory.quantity }}</td>
-            <td>{{ inventory.lastUpdate }}</td>
-            <td>
-                <a href="{% url 'inventory_update' inventory.pk %}">Edit</a>
-                <a href="{% url 'inventory_delete' inventory.pk %}">Delete</a>
-            </td>
-        </tr>
-        {% endfor %}
-    </table>
-    <a class="add-inventory" href="{% url 'inventory_create' %}">Add New Inventory</a>
-    <a class="home-button" href="{% url 'home' %}">Go to Homepage</a>
-</body>
-</html>
+{% extends 'base.html' %}
+{% block title %}Inventory - Sales Management System{% endblock %}
+
+{% block content %}
+<div class="p-8">
+    <h1 class="text-3xl font-bold mb-8">Inventory</h1>
+
+    <!-- Tabs -->
+    <div class="mb-6 border-b">
+        <nav class="flex gap-8">
+            <a href="{% url 'inventory_list' %}" class="pb-4 text-blue-600 border-b-2 border-blue-600 font-medium">
+                All
+            </a>
+            <a href="{% url 'near_expiry'%}" class="pb-4 text-gray-500 hover:text-gray-700">
+                Near Expiry
+            </a>
+        </nav>
+    </div>
+
+    <!-- Table -->
+    <div class="bg-white rounded-lg shadow">
+        <table class="w-full">
+            <thead>
+                <tr class="text-left text-gray-500 text-sm border-b">
+                    <th class="px-6 py-4 font-medium">Product</th>
+                    <th class="px-6 py-4 font-medium">Items</th>
+                    <th class="px-6 py-4 font-medium text-right">Price</th>
+                    <th class="px-6 py-4 font-medium w-20">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in inventory_data %}
+                <tr class="border-b last:border-b-0">
+                    <td class="px-6 py-4">{{ item.productName }}</td>
+                    <td class="px-6 py-4">{{ item.quantity }}</td>
+                    <td class="px-6 py-4 text-right">₹{{ item.price|floatformat:2 }}</td>
+                    <td class="px-6 py-4">
+                        <div class="flex gap-3">
+                            <a href="{% url 'inventory_update' item.pk %}" class="text-gray-500 hover:text-gray-700">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                                </svg>
+                            </a>
+                            <a href="{% url 'inventory_delete' item.pk %}" class="text-gray-500 hover:text-gray-700">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                </svg>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="mt-6">
+        <!-- Button to trigger modal -->
+        <button type="button" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700" data-toggle="modal" data-target="#addProductModal">
+            Add New Product
+        </button>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="addProductModal" tabindex="-1" role="dialog" aria-labelledby="addProductModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addProductModalLabel">Add New Product</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form method="post" action="{% url 'inventory_create' %}">
+                    {% csrf_token %}
+                    {{ form.as_p }}
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Bootstrap CSS and JS -->
+<link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+{% endblock %}

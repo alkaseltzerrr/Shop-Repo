@@ -9,4 +9,4 @@ class SaleForm(forms.ModelForm):
 class SaleDetailForm(forms.ModelForm):
     class Meta:
         model = SaleDetail
-        fields = ['SaleID', 'ProductID', 'Quantity', 'UnitPrice', 'PaymentType']  # Add ProductID if needed
+        fields = ['SaleID', 'ProductID', 'Quantity', 'UnitPrice', 'PaymentType']

@@ -46,6 +46,9 @@ INSTALLED_APPS = [
     'apps.crm',
     'apps.inventory', #carl
     'apps.supplier', #carl
+
+    #third party apps
+    'widget_tweaks',
 ]
 
 MIDDLEWARE = [

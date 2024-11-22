@@ -19,7 +19,7 @@ class SaleDetail(models.Model):
     ProductID = models.ForeignKey(Product, on_delete=models.DO_NOTHING, related_name='product', null=False, blank=False)
     Quantity = models.IntegerField()
     UnitPrice = models.DecimalField(max_digits=10, decimal_places=2)
-    PaymentType = models.CharField(max_length=50)
+    PaymentType = models.CharField(max_length=50, choices=[('Buy', 'Buy'), ('Sell', 'Sell')])
 
     def __str__(self):
         return f"SaleDetail {self.SaleDetailID} - Sale {self.SaleID_id} - {self.Quantity} items"

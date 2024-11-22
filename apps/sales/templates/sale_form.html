@@ -9,12 +9,34 @@
 <body>
 <div class="container my-4">
     <h2>{% if form.instance.pk %}Edit Sale{% else %}New Sale{% endif %}</h2>
-    <form method="post" class="border p-4 bg-light">
+    <form method="post" class="border p-4 bg-light" id="sale-form">
         {% csrf_token %}
         {{ form.as_p }}
-        <button type="submit" class="btn btn-success">Save</button>
+        <button type="submit" class="btn btn-success" id="save-button" disabled>Save</button>
         <a href="{% url 'sale_list' %}" class="btn btn-secondary">Cancel</a>
     </form>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('sale-form');
+        const saveButton = document.getElementById('save-button');
+        const initialFormData = new FormData(form);
+
+        form.addEventListener('input', function() {
+            const currentFormData = new FormData(form);
+            let formChanged = false;
+
+            for (let [key, value] of initialFormData.entries()) {
+                if (currentFormData.get(key) !== value) {
+                    formChanged = true;
+                    break;
+                }
+            }
+
+            saveButton.disabled = !formChanged;
+        });
+    });
+</script>
 </body>
 </html>

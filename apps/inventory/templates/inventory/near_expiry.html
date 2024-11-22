@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}Near Expiry Products{% endblock %}
+
+{% block content %}
+<div class="p-8">
+    <h1 class="text-3xl font-bold mb-8">Near Expiry Products</h1>
+
+
+    <!-- Tabs -->
+    <div class="mb-6 border-b">
+        <nav class="flex gap-8">
+            <a href="{% url 'inventory_list' %}" class="pb-4 text-gray-500 hover:text-gray-700">
+                All
+            </a>
+            <a href="{% url 'near_expiry'%}" class="pb-4 text-blue-600 border-b-2 border-blue-600 font-medium">
+                Near Expiry
+            </a>
+        </nav>
+    </div>
+
+    <!-- Table -->
+    <div class="bg-white rounded-lg shadow">
+        <table class="w-full">
+            <thead>
+                <tr class="text-left text-gray-500 text-sm border-b">
+                    <th class="px-6 py-4 font-medium">Product Name</th>
+                    <th class="px-6 py-4 font-medium">Item quantity</th>
+                    <th class="px-6 py-4 font-medium">Days Left</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in near_expiry_data %}
+                <tr class="border-b last:border-b-0">
+                    <td class="px-6 py-4">{{ item.productName }}</td>
+                    <td class="px-6 py-4">{{ item.quantity}}</td>
+                    <td class="px-6 py-4">{{ item.days_left }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
