@@ -143,6 +143,7 @@ def owner_login(request):
         form = LoginForm()
     return render(request, 'login.html', {'form': form})
 
+
 def owner_register(request):
     if request.method == 'POST':
         form = RegisterOwnerForm(request.POST)
@@ -164,4 +165,8 @@ def owner_register(request):
             return redirect('login')
     else:
         form = RegisterOwnerForm()
+
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return render(request, 'RegisterOwner.html', {'form': form})
+
     return render(request, 'RegisterOwner.html', {'form': form})

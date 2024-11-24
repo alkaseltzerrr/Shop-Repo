@@ -3,7 +3,7 @@ from django.shortcuts import render
 # Create your views here.
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Product, Inventory, Category
-from .forms import ProductForm, InventoryForm, CategoryForm
+from .forms import ProductForm, InventoryForm, CategoryForm, CombinedProductInventoryForm
 from datetime import date
 
 # Product Views
@@ -97,23 +97,64 @@ def inventory_list(request):
 
 def inventory_create(request):
     if request.method == 'POST':
-        form = InventoryForm(request.POST)
+        form = CombinedProductInventoryForm(request.POST)
         if form.is_valid():
-            form.save()
+            # Save Product
+            product = Product(
+                productName=form.cleaned_data['productName'],#
+                description=form.cleaned_data['description'],
+                price=form.cleaned_data['price'],#
+                expireyDate=form.cleaned_data['expireyDate'],
+                categoryID=form.cleaned_data['categoryID']
+            )
+            product.save()
+
+            # Save Inventory
+            inventory = Inventory(
+                productID=product,
+                quantity=form.cleaned_data['quantity'],#
+                lastUpdate=form.cleaned_data['lastUpdate']#
+            )
+            inventory.save()
+
             return redirect('inventory_list')
     else:
-        form = InventoryForm()
+        form = CombinedProductInventoryForm()
     return render(request, 'inventory/inventory_form.html', {'form': form})
 
 def inventory_update(request, pk):
     inventory = get_object_or_404(Inventory, pk=pk)
+    product = inventory.productID
+
     if request.method == 'POST':
-        form = InventoryForm(request.POST, instance=inventory)
+        form = CombinedProductInventoryForm(request.POST)
         if form.is_valid():
-            form.save()
+            # Update Product
+            product.productName = form.cleaned_data['productName']
+            product.description = form.cleaned_data['description']
+            product.price = form.cleaned_data['price']
+            product.expireyDate = form.cleaned_data['expireyDate']
+            product.categoryID = form.cleaned_data['categoryID']
+            product.save()
+
+            # Update Inventory
+            inventory.quantity = form.cleaned_data['quantity']
+            inventory.lastUpdate = form.cleaned_data['lastUpdate']
+            inventory.save()
+
             return redirect('inventory_list')
     else:
-        form = InventoryForm(instance=inventory)
+        initial_data = {
+            'productName': product.productName,
+            'description': product.description,
+            'price': product.price,
+            'expireyDate': product.expireyDate,
+            'categoryID': product.categoryID,
+            'quantity': inventory.quantity,
+            'lastUpdate': inventory.lastUpdate,
+        }
+        form = CombinedProductInventoryForm(initial=initial_data)
+
     return render(request, 'inventory/inventory_form.html', {'form': form})
 
 def inventory_delete(request, pk):
