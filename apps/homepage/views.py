@@ -7,3 +7,6 @@ def home(request):
 
 def crud(request):
     return render(request, 'homepage/crud.html')
+
+def crud(request):
+    return render(request, 'homepage/crud.html')
