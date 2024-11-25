@@ -1,6 +1,10 @@
+from django.contrib import messages
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Sale, SaleDetail
-from .forms import SaleForm, SaleDetailForm
+from .forms import SaleForm, SaleDetailForm, CustomerForm
+from ..crm.models import Customer
+#transation imports
+from ..inventory.forms import ProductForm
 
 
 def sale_list(request):
@@ -74,3 +78,53 @@ def sale_detail_delete(request, pk):
         sale_detail.delete()
         return redirect('sale_detail_list', sale_id=sale_id)
     return render(request, 'sale_detail_confirm_delete.html', {'sale_detail': sale_detail})
+
+#for transaction
+
+def customer_product_create(request):
+    if request.method == 'POST':
+        customer_form = CustomerForm(request.POST)
+        sale_form = SaleForm(request.POST)
+        sale_detail_form = SaleDetailForm(request.POST)
+        product_form = ProductForm(request.POST)
+
+        if customer_form.is_valid() and sale_form.is_valid() and sale_detail_form.is_valid() and product_form.is_valid():
+            customer = customer_form.save()
+            sale = sale_form.save(commit=False)
+            sale.Customer = customer
+            sale.save()
+
+            product = product_form.save()
+            sale_detail = sale_detail_form.save(commit=False)
+            sale_detail.SaleID = sale
+            sale_detail.ProductID = product
+            sale_detail.save()
+
+            return redirect('sale_transaction_history')
+        else:
+            print("Customer Form Errors:", customer_form.errors)
+            print("Sale Form Errors:", sale_form.errors)
+            print("Sale Detail Form Errors:", sale_detail_form.errors)
+            print("Product Form Errors:", product_form.errors)
+    else:
+        customer_form = CustomerForm()
+        sale_form = SaleForm()
+        sale_detail_form = SaleDetailForm()
+        product_form = ProductForm()
+
+    return render(request, 'customer_product_form.html', {
+        'sale_form': sale_form,
+        'sale_detail_form': sale_detail_form,
+        'product_form': product_form,
+        'customer_form': customer_form
+    })
+
+
+
+def sale_transaction_history(request):
+    sales = Sale.objects.all()
+    sale_details = SaleDetail.objects.all()
+    return render(request, 'sale_transaction_history.html', {
+        'sales': sales,
+        'sale_details': sale_details
+    })

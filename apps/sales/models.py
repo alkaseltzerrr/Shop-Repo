@@ -7,8 +7,9 @@ class Sale(models.Model):
     SaleID = models.AutoField(primary_key=True)
     SaleDate = models.DateField()
     Employee = models.ForeignKey(Employee, on_delete=models.DO_NOTHING, related_name='sales', null=False,blank=False)
-    Customer = models.ForeignKey(Customer, on_delete=models.DO_NOTHING, related_name='purchases',null=False,blank=False)
-    TotalAmount = models.DecimalField(max_digits=10, decimal_places=2)
+    CustomerID = models.ForeignKey(Customer, on_delete=models.DO_NOTHING, default=1)
+    #Customer = models.ForeignKey(Customer, on_delete=models.DO_NOTHING, related_name='purchases',null=False,blank=False)
+    TotalAmount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
 
     def __str__(self):
         return f"Sale {self.SaleID} - {self.SaleDate} - ${self.TotalAmount}"

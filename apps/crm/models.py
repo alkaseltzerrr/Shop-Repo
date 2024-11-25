@@ -4,8 +4,7 @@ class Customer(models.Model):
     customerid = models.AutoField(primary_key=True)
     customername = models.CharField(max_length=100)
     contactinformation = models.TextField()
-    loyaltypoints = models.DecimalField(max_digits=10, decimal_places=2)
-
+    loyaltypoints = models.IntegerField(default=0)
     def __str__(self):
         return self.customername
 

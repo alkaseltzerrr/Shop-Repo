@@ -3,18 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register Owner</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <title>Register - Sales Management System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-<div class="container my-4">
-    <h2>Register Owner</h2>
-    <form method="post" enctype="multipart/form-data" class="border p-4 bg-light">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="btn btn-success">Register</button>
-        <a href="{% url 'login' %}" class="btn btn-secondary">Cancel</a>
-    </form>
-</div>
+<body class="bg-gray-50">
+    <div class="flex justify-center items-center min-h-screen p-4">
+        <div class="w-full max-w-md bg-white rounded-lg shadow-sm p-8">
+            <h1 class="text-2xl font-bold text-center mb-8">Register</h1>
+            
+            <form method="post" enctype="multipart/form-data" class="space-y-8">
+                {% csrf_token %}
+                
+                <!-- Account Section -->
+                <div class="space-y-4">
+                    <h2 class="text-lg font-medium text-gray-700">Account</h2>
+                    <div class="space-y-4">
+                        <div>
+                            {{ form.full_name.errors }}
+                            <input type="text" 
+                                   name="{{ form.full_name.name }}" 
+                                   {% if form.full_name.value %}value="{{ form.full_name.value }}"{% endif %}
+                                   class="w-full px-4 py-2 rounded bg-gray-100 border-transparent focus:border-gray-500 focus:bg-white focus:ring-0" 
+                                   placeholder="Full Name">
+                        </div>
+                        <div>
+                            {{ form.email.errors }}
+                            <input type="email" 
+                                   name="{{ form.email.name }}" 
+                                   {% if form.email.value %}value="{{ form.email.value }}"{% endif %}
+                                   class="w-full px-4 py-2 rounded bg-gray-100 border-transparent focus:border-gray-500 focus:bg-white focus:ring-0" 
+                                   placeholder="Email ID">
+                        </div>
+                        <div>
+                            {{ form.password1.errors }}
+                            <input type="password" 
+                                   name="{{ form.password1.name }}" 
+                                   class="w-full px-4 py-2 rounded bg-gray-100 border-transparent focus:border-gray-500 focus:bg-white focus:ring-0" 
+                                   placeholder="Password">
+                        </div>
+                        <div>
+                            {{ form.password2.errors }}
+                            <input type="password" 
+                                   name="{{ form.password2.name }}" 
+                                   class="w-full px-4 py-2 rounded bg-gray-100 border-transparent focus:border-gray-500 focus:bg-white focus:ring-0" 
+                                   placeholder="Confirm Password">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="border-t"></div>
+
+                <!-- Shop Details Section -->
+                <div class="space-y-4">
+                    <h2 class="text-lg font-medium text-gray-700">Shop Details</h2>
+                    <div class="space-y-4">
+                        <div>
+                            {{ form.shop_name.errors }}
+                            <input type="text" 
+                                   name="{{ form.shop_name.name }}" 
+                                   {% if form.shop_name.value %}value="{{ form.shop_name.value }}"{% endif %}
+                                   class="w-full px-4 py-2 rounded bg-gray-100 border-transparent focus:border-gray-500 focus:bg-white focus:ring-0" 
+                                   placeholder="Name">
+                        </div>
+                        <div>
+                            {{ form.address.errors }}
+                            <input type="text" 
+                                   name="{{ form.address.name }}" 
+                                   {% if form.address.value %}value="{{ form.address.value }}"{% endif %}
+                                   class="w-full px-4 py-2 rounded bg-gray-100 border-transparent focus:border-gray-500 focus:bg-white focus:ring-0" 
+                                   placeholder="Address">
+                        </div>
+                        <div>
+                            {{ form.contact_info.errors }}
+                            <input type="text" 
+                                   name="{{ form.contact_info.name }}" 
+                                   {% if form.contact_info.value %}value="{{ form.contact_info.value }}"{% endif %}
+                                   class="w-full px-4 py-2 rounded bg-gray-100 border-transparent focus:border-gray-500 focus:bg-white focus:ring-0" 
+                                   placeholder="Contact Information">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit and Cancel Buttons -->
+                <div class="pt-4 flex gap-4">
+                    <a href="{% url 'login' %}"
+                       class="w-1/2 px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 text-center">
+                        Cancel
+                    </a>
+                    <button type="submit"
+                            class="w-1/2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                        Register
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 </body>
 </html>

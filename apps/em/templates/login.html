@@ -23,7 +23,7 @@
                 <input type="password" name="password" id="id_password" class="form-control" placeholder="Password" required>
             </div>
 
-            <button type="submit" class="btn btn-success btn-block mt-3">Login</button>
+            <button type="submit" class="btn btn-primary btn-block mt-3">Login</button>
         </form>
 
         {% if messages %}
@@ -36,7 +36,72 @@
             </div>
         {% endif %}
         <div class="text-center mt-3">
-            <p>New User? <a href="{% url 'RegisterOwner' %}">Register</a></p>
+            <p>New User? <a href="#" data-toggle="modal" data-target="#registerModal">Register</a></p>
+        </div>
+    </div>
+</div>
+
+<!-- Register Modal -->
+<div class="modal fade" id="registerModal" tabindex="-1" role="dialog" aria-labelledby="registerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="registerModalLabel">Register</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form method="post" enctype="multipart/form-data" class="space-y-8">
+                    {% csrf_token %}
+                    <!-- Account Section -->
+                    <div class="space-y-4">
+                        <h2 class="text-lg font-medium text-gray-700">Account</h2>
+                        <div class="space-y-4">
+                            <div>
+                                {{ form.full_name.errors }}
+                                <input type="text" name="{{ form.full_name.name }}" {% if form.full_name.value %}value="{{ form.full_name.value }}"{% endif %} class="w-full px-4 py-2 rounded bg-gray-100 border-transparent focus:border-gray-500 focus:bg-white focus:ring-0" placeholder="Full Name">
+                            </div>
+                            <div>
+                                {{ form.email.errors }}
+                                <input type="email" name="{{ form.email.name }}" {% if form.email.value %}value="{{ form.email.value }}"{% endif %} class="w-full px-4 py-2 rounded bg-gray-100 border-transparent focus:border-gray-500 focus:bg-white focus:ring-0" placeholder="Email ID">
+                            </div>
+                            <div>
+                                {{ form.password1.errors }}
+                                <input type="password" name="{{ form.password1.name }}" class="w-full px-4 py-2 rounded bg-gray-100 border-transparent focus:border-gray-500 focus:bg-white focus:ring-0" placeholder="Password">
+                            </div>
+                            <div>
+                                {{ form.password2.errors }}
+                                <input type="password" name="{{ form.password2.name }}" class="w-full px-4 py-2 rounded bg-gray-100 border-transparent focus:border-gray-500 focus:bg-white focus:ring-0" placeholder="Confirm Password">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="border-t"></div>
+                    <!-- Shop Details Section -->
+                    <div class="space-y-4">
+                        <h2 class="text-lg font-medium text-gray-700">Shop Details</h2>
+                        <div class="space-y-4">
+                            <div>
+                                {{ form.shop_name.errors }}
+                                <input type="text" name="{{ form.shop_name.name }}" {% if form.shop_name.value %}value="{{ form.shop_name.value }}"{% endif %} class="w-full px-4 py-2 rounded bg-gray-100 border-transparent focus:border-gray-500 focus:bg-white focus:ring-0" placeholder="Name">
+                            </div>
+                            <div>
+                                {{ form.address.errors }}
+                                <input type="text" name="{{ form.address.name }}" {% if form.address.value %}value="{{ form.address.value }}"{% endif %} class="w-full px-4 py-2 rounded bg-gray-100 border-transparent focus:border-gray-500 focus:bg-white focus:ring-0" placeholder="Address">
+                            </div>
+                            <div>
+                                {{ form.contact_info.errors }}
+                                <input type="text" name="{{ form.contact_info.name }}" {% if form.contact_info.value %}value="{{ form.contact_info.value }}"{% endif %} class="w-full px-4 py-2 rounded bg-gray-100 border-transparent focus:border-gray-500 focus:bg-white focus:ring-0" placeholder="Contact Information">
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Submit and Cancel Buttons -->
+                    <div class="pt-4 flex gap-4">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Register</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 </div>

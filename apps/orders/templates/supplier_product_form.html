@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+
+{% block title %}Transactions - Sales Management System{% endblock %}
+
+{% block content %}
+<div class="p-8">
+    <h1 class="text-3xl font-bold mb-8">Transactions</h1>
+
+    <div class="mb-6 border-b">
+        <nav class="flex gap-8">
+            <a href="{% url 'supplier_product_form' %}" class="pb-4 text-blue-600 border-b-2 border-blue-600 font-medium">
+                Buy
+            </a>
+            <a href="{% url 'customer_product_form' %}" class="pb-4 text-gray-500 hover:text-gray-700">
+                Sell
+            </a>
+            <a href="{% url 'order_transaction_history' %}" class="pb-4 text-gray-500 hover:text-gray-700">
+                Buy History
+            </a>
+            <a href="{% url 'sale_transaction_history' %}" class="pb-4 text-gray-500 hover:text-gray-700">
+                Sell History
+            </a>
+        </nav>
+    </div>
+
+    <!-- Form -->
+    <div class="max-w-2xl bg-white rounded-lg shadow-sm p-8">
+        <h2 class="text-2xl font-semibold mb-8">Buy Items</h2>
+
+        <form method="post" class="space-y-8">
+            {% csrf_token %}
+
+            <!-- Supplier Section -->
+            <div class="space-y-4">
+                <h3 class="text-lg font-medium text-gray-700">Supplier</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label for="{{ supplier_form.SupplierName.id }}" class="block text-sm font-medium text-gray-700">Name</label>
+                        {{ supplier_form.SupplierName.errors }}
+                        <input type="text" name="{{ supplier_form.SupplierName.name }}" id="{{ supplier_form.SupplierName.id }}" {% if supplier_form.SupplierName.value %}value="{{ supplier_form.SupplierName.value }}"{% endif %} class="w-full px-4 py-2 rounded bg-gray-100 border-transparent focus:border-gray-500 focus:bg-white focus:ring-0" placeholder="Name">
+                    </div>
+                    <div>
+                        <label for="{{ supplier_form.ContactInformation.id }}" class="block text-sm font-medium text-gray-700">Contact Information</label>
+                        {{ supplier_form.ContactInformation.errors }}
+                        <input type="text" name="{{ supplier_form.ContactInformation.name }}" id="{{ supplier_form.ContactInformation.id }}" {% if supplier_form.ContactInformation.value %}value="{{ supplier_form.ContactInformation.value }}"{% endif %} class="w-full px-4 py-2 rounded bg-gray-100 border-transparent focus:border-gray-500 focus:bg-white focus:ring-0" placeholder="Contact Information">
+                    </div>
+                    <div>
+                        <label for="{{ supplier_form.Address.id }}" class="block text-sm font-medium text-gray-700">Address</label>
+                        {{ supplier_form.Address.errors }}
+                        <input type="text" name="{{ supplier_form.Address.name }}" id="{{ supplier_form.Address.id }}" {% if supplier_form.Address.value %}value="{{ supplier_form.Address.value }}"{% endif %} class="w-full px-4 py-2 rounded bg-gray-100 border-transparent focus:border-gray-500 focus:bg-white focus:ring-0" placeholder="Address">
+                    </div>
+                </div>
+            </div>
+
+            <div class="border-t my-8"></div>
+
+            <!-- Product Section -->
+            <div class="space-y-4">
+                <h3 class="text-lg font-medium text-gray-700">Product</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label for="{{ product_form.productName.id }}" class="block text-sm font-medium text-gray-700">Product Name</label>
+                        {{ product_form.productName.errors }}
+                        <input type="text" name="{{ product_form.productName.name }}" id="{{ product_form.productName.id }}" {% if product_form.productName.value %}value="{{ product_form.productName.value }}"{% endif %} class="w-full px-4 py-2 rounded bg-gray-100 border-transparent focus:border-gray-500 focus:bg-white focus:ring-0" placeholder="Product Name">
+                    </div>
+                    <div>
+                        <label for="{{ product_form.price.id }}" class="block text-sm font-medium text-gray-700">Price</label>
+                        {{ product_form.price.errors }}
+                        <input type="number" name="{{ product_form.price.name }}" id="{{ product_form.price.id }}" {% if product_form.price.value %}value="{{ product_form.price.value }}"{% endif %} class="w-full px-4 py-2 rounded bg-gray-100 border-transparent focus:border-gray-500 focus:bg-white focus:ring-0" placeholder="Price">
+                    </div>
+                    <div>
+                        <label for="{{ product_form.expireyDate.id }}" class="block text-sm font-medium text-gray-700">Expiry Date</label>
+                        {{ product_form.expireyDate.errors }}
+                        <input type="date" name="{{ product_form.expireyDate.name }}" id="{{ product_form.expireyDate.id }}" {% if product_form.expireyDate.value %}value="{{ product_form.expireyDate.value|date:'Y-m-d' }}"{% endif %} class="w-full px-4 py-2 rounded bg-gray-100 border-transparent focus:border-gray-500 focus:bg-white focus:ring-0" placeholder="Expiry Date">
+                    </div>
+                    <div>
+                        <label for="{{ product_form.categoryID.id }}" class="block text-sm font-medium text-gray-700">Category</label>
+                        {{ product_form.categoryID.errors }}
+                        <select name="{{ product_form.categoryID.name }}" id="{{ product_form.categoryID.id }}" class="w-full px-4 py-2 rounded bg-gray-100 border-transparent focus:border-gray-500 focus:bg-white focus:ring-0">
+                            {% for category in product_form.categoryID.field.queryset %}
+                                <option value="{{ category.pk }}" {% if product_form.categoryID.value == category.pk %}selected{% endif %}>{{ category }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="border-t my-8"></div>
+
+            <!-- Order Section -->
+            <div class="space-y-4">
+                <h3 class="text-lg font-medium text-gray-700">Order</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label for="{{ order_form.OrderDate.id }}" class="block text-sm font-medium text-gray-700">Order Date</label>
+                        {{ order_form.OrderDate.errors }}
+                        <input type="date" name="{{ order_form.OrderDate.name }}" id="{{ order_form.OrderDate.id }}" {% if order_form.OrderDate.value %}value="{{ order_form.OrderDate.value|date:'Y-m-d' }}"{% endif %} class="w-full px-4 py-2 rounded bg-gray-100 border-transparent focus:border-gray-500 focus:bg-white focus:ring-0" placeholder="Order Date">
+                    </div>
+                </div>
+            </div>
+
+            <div class="border-t my-8"></div>
+
+            <!-- Order Detail Section -->
+            <div class="space-y-4">
+                <h3 class="text-lg font-medium text-gray-700">Order Detail</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label for="{{ order_detail_form.Quantity.id }}" class="block text-sm font-medium text-gray-700">Quantity</label>
+                        {{ order_detail_form.Quantity.errors }}
+                        <input type="number" name="{{ order_detail_form.Quantity.name }}" id="{{ order_detail_form.Quantity.id }}" {% if order_detail_form.Quantity.value %}value="{{ order_detail_form.Quantity.value }}"{% endif %} class="w-full px-4 py-2 rounded bg-gray-100 border-transparent focus:border-gray-500 focus:bg-white focus:ring-0" placeholder="Quantity">
+                    </div>
+                    <div>
+                        <label for="{{ order_detail_form.UnitPrice.id }}" class="block text-sm font-medium text-gray-700">Unit Price</label>
+                        {{ order_detail_form.UnitPrice.errors }}
+                        <input type="number" name="{{ order_detail_form.UnitPrice.name }}" id="{{ order_detail_form.UnitPrice.id }}" {% if order_detail_form.UnitPrice.value %}value="{{ order_detail_form.UnitPrice.value }}"{% endif %} class="w-full px-4 py-2 rounded bg-gray-100 border-transparent focus:border-gray-500 focus:bg-white focus:ring-0" placeholder="Unit Price">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="flex justify-center mt-8">
+                <button type="submit" class="px-8 py-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                    Buy
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

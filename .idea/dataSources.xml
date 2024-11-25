@@ -8,11 +8,11 @@
       <jdbc-url>jdbc:mysql://localhost:3306/imkahaca</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
-    <data-source source="LOCAL" name="db [3]" uuid="8db81b52-3388-4726-9fb4-d69c8c08b3fa">
+    <data-source source="LOCAL" name="db" uuid="dc428876-bcb5-415e-9b84-7e0af969760f">
       <driver-ref>sqlite.xerial</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
-      <jdbc-url>jdbc:sqlite:E:\CSIT327\Django\ShopRepo\db.sqlite3</jdbc-url>
+      <jdbc-url>jdbc:sqlite:C:\Users\Carl\PycharmProjects\ShopRepo\db.sqlite3</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
       <libraries>
         <library>
