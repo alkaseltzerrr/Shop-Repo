@@ -1,0 +1,279 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Sales - Store Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .product-item {
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+    .product-item:hover {
+        background-color: #f8f9fa;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Sales Form -->
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">New Sale</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{% url 'process_sale' %}" id="saleForm">
+                    {% csrf_token %}
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Customer</label>
+                            <select class="form-select" name="customer" id="customerSelect">
+                                <option value="">Walk-in Customer</option>
+                                {% for customer in customers %}
+                                <option value="{{ customer.id }}">{{ customer.get_full_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Payment Method</label>
+                            <select class="form-select" name="payment_method" required>
+                                <option value="CASH">Cash</option>
+                                <option value="CARD">Card</option>
+                                <option value="MOBILE">Mobile Payment</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive mb-3">
+                        <table class="table" id="saleItems">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Quantity</th>
+                                    <th>Unit Price</th>
+                                    <th>Subtotal</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Sale items will be added here dynamically -->
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                                    <td><span id="totalAmount">$0.00</span></td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary" id="processSaleBtn" disabled>
+                            Process Sale
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Recent Sales -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Recent Sales</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Invoice</th>
+                                <th>Customer</th>
+                                <th>Items</th>
+                                <th>Total</th>
+                                <th>Payment</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sale in sales %}
+                            <tr>
+                                <td>#{{ sale.id }}</td>
+                                <td>{{ sale.customer.get_full_name|default:"Walk-in Customer" }}</td>
+                                <td>{{ sale.items.count }} items</td>
+                                <td>${{ sale.total_amount }}</td>
+                                <td>{{ sale.get_payment_method_display }}</td>
+                                <td>{{ sale.sale_date|date:"M d, Y H:i" }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-info" onclick="viewSaleDetails({{ sale.id }})">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center">No recent sales</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Products List -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <div class="input-group">
+                    <input type="text" class="form-control" id="productSearch" placeholder="Search products...">
+                    <button class="btn btn-outline-secondary" type="button">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush" id="productsList">
+                    {% for product in products %}
+                    <a href="#" class="list-group-item list-group-item-action product-item" 
+                       data-id="{{ product.id }}"
+                       data-name="{{ product.name }}"
+                       data-price="{{ product.price }}"
+                       data-stock="{{ product.stock_quantity }}">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ product.name }}</h6>
+                            <small>${{ product.price }}</small>
+                        </div>
+                        <small class="text-muted">Stock: {{ product.stock_quantity }}</small>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sale Details Modal -->
+<div class="modal fade" id="saleDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Sale Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Sale details will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="printInvoice()">
+                    <i class="fas fa-print"></i> Print Invoice
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Initialize variables
+    let saleItems = [];
+    const products = {{ products_json|safe }};
+
+    // Add product to sale
+    function addProduct(productId, productName, price, stock) {
+        const quantity = 1;
+        const subtotal = price * quantity;
+        
+        const row = `
+            <tr data-product-id="${productId}">
+                <td>${productName}</td>
+                <td>
+                    <input type="number" class="form-control form-control-sm quantity-input" 
+                           value="${quantity}" min="1" max="${stock}"
+                           onchange="updateQuantity(${productId}, this.value)">
+                </td>
+                <td>$${price.toFixed(2)}</td>
+                <td>$${subtotal.toFixed(2)}</td>
+                <td>
+                    <button type="button" class="btn btn-sm btn-danger" onclick="removeItem(${productId})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+        
+        $('#saleItems tbody').append(row);
+        updateTotal();
+        $('#processSaleBtn').prop('disabled', false);
+    }
+
+    // Update quantity
+    function updateQuantity(productId, quantity) {
+        const row = $(`tr[data-product-id="${productId}"]`);
+        const price = parseFloat(row.find('td:eq(2)').text().replace('$', ''));
+        const subtotal = price * quantity;
+        row.find('td:eq(3)').text(`$${subtotal.toFixed(2)}`);
+        updateTotal();
+    }
+
+    // Remove item
+    function removeItem(productId) {
+        $(`tr[data-product-id="${productId}"]`).remove();
+        updateTotal();
+        if ($('#saleItems tbody tr').length === 0) {
+            $('#processSaleBtn').prop('disabled', true);
+        }
+    }
+
+    // Update total amount
+    function updateTotal() {
+        let total = 0;
+        $('#saleItems tbody tr').each(function() {
+            const subtotal = parseFloat($(this).find('td:eq(3)').text().replace('$', ''));
+            total += subtotal;
+        });
+        $('#totalAmount').text(`$${total.toFixed(2)}`);
+    }
+
+    // Product search
+    $('#productSearch').on('input', function() {
+        const searchTerm = $(this).val().toLowerCase();
+        $('.product-item').each(function() {
+            const productName = $(this).find('h6').text().toLowerCase();
+            $(this).toggle(productName.includes(searchTerm));
+        });
+    });
+
+    // Add product when clicked
+    $('.product-item').click(function() {
+        const productId = $(this).data('id');
+        const productName = $(this).data('name');
+        const price = $(this).data('price');
+        const stock = $(this).data('stock');
+        
+        if ($(`tr[data-product-id="${productId}"]`).length === 0) {
+            addProduct(productId, productName, price, stock);
+        }
+    });
+
+    // View sale details
+    function viewSaleDetails(saleId) {
+        // Load sale details via AJAX
+        $.get(`/sales/${saleId}/details/`, function(data) {
+            $('#saleDetailsModal .modal-body').html(data);
+            $('#saleDetailsModal').modal('show');
+        });
+    }
+
+    // Print invoice
+    function printInvoice() {
+        window.print();
+    }
+</script>
+{% endblock %}

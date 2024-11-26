@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Sale Details - Store Management System{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Sale Invoice #{{ sale.id }}</h5>
+                <div>
+                    <button class="btn btn-primary" onclick="window.print()">
+                        <i class="fas fa-print"></i> Print
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-sm-6">
+                    <h6 class="mb-3">From:</h6>
+                    <div>
+                        <strong>Your Store Name</strong>
+                    </div>
+                    <div>123 Store Street</div>
+                    <div>City, State 12345</div>
+                    <div>Phone: (123) 456-7890</div>
+                    <div>Email: store@example.com</div>
+                </div>
+
+                <div class="col-sm-6">
+                    <h6 class="mb-3">To:</h6>
+                    {% if sale.customer %}
+                    <div>
+                        <strong>{{ sale.customer.get_full_name }}</strong>
+                    </div>
+                    <div>{{ sale.customer.address }}</div>
+                    <div>Phone: {{ sale.customer.phone }}</div>
+                    <div>Email: {{ sale.customer.email }}</div>
+                    {% else %}
+                    <div>
+                        <strong>Walk-in Customer</strong>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-sm-6">
+                    <div><strong>Sale Date:</strong> {{ sale.sale_date|date:"M d, Y H:i" }}</div>
+                    <div><strong>Payment Method:</strong> {{ sale.get_payment_method_display }}</div>
+                    <div><strong>Processed by:</strong> {{ sale.employee.user.get_full_name }}</div>
+                </div>
+                {% if sale.customer %}
+                <div class="col-sm-6">
+                    <div>
+                        <strong>Loyalty Points Earned:</strong> 
+                        {{ sale.total_amount|floatformat:"0" }} points
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Quantity</th>
+                            <th>Unit Price</th>
+                            <th class="text-end">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in sale.items.all %}
+                        <tr>
+                            <td>{{ item.product.name }}</td>
+                            <td>{{ item.quantity }}</td>
+                            <td>${{ item.unit_price|floatformat:2 }}</td>
+                            <td class="text-end">${{ item.subtotal|floatformat:2 }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                            <td class="text-end"><strong>${{ sale.total_amount|floatformat:2 }}</strong></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <div class="row">
+                <div class="col-12">
+                    <p class="text-center mt-4 mb-0">
+                        Thank you for your business!
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_css %}
+<style>
+    @media print {
+        body * {
+            visibility: hidden;
+        }
+        .card, .card * {
+            visibility: visible;
+        }
+        .card {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+        }
+        .btn {
+            display: none;
+        }
+    }
+</style>
+{% endblock %}
+{% endblock %}
