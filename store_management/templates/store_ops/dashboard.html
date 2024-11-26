@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - Store Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card-dashboard {
+        transition: transform 0.2s;
+    }
+    .card-dashboard:hover {
+        transform: translateY(-5px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="h3">Dashboard</h1>
+    </div>
+</div>
+
+<!-- Quick Stats -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white card-dashboard">
+            <div class="card-body">
+                <h5 class="card-title">Total Sales Today</h5>
+                <h2 class="card-text">${{ total_sales_today }}</h2>
+                <p class="mb-0">
+                    <small>{{ sales_count_today }} transactions</small>
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white card-dashboard">
+            <div class="card-body">
+                <h5 class="card-title">Products in Stock</h5>
+                <h2 class="card-text">{{ total_products }}</h2>
+                <p class="mb-0">
+                    <small>{{ low_stock_count }} low stock items</small>
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white card-dashboard">
+            <div class="card-body">
+                <h5 class="card-title">Active Customers</h5>
+                <h2 class="card-text">{{ total_customers }}</h2>
+                <p class="mb-0">
+                    <small>{{ new_customers_today }} new today</small>
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white card-dashboard">
+            <div class="card-body">
+                <h5 class="card-title">Pending Orders</h5>
+                <h2 class="card-text">{{ pending_orders }}</h2>
+                <p class="mb-0">
+                    <small>{{ orders_today }} new today</small>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Sales -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Recent Sales</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Invoice</th>
+                                <th>Customer</th>
+                                <th>Amount</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sale in recent_sales %}
+                            <tr>
+                                <td>#{{ sale.id }}</td>
+                                <td>{{ sale.customer.get_full_name|default:"Walk-in Customer" }}</td>
+                                <td>${{ sale.total_amount }}</td>
+                                <td>{{ sale.sale_date|date:"M d, Y H:i" }}</td>
+                                <td>
+                                    <span class="badge bg-success">Completed</span>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center">No recent sales</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Low Stock Alert -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Low Stock Alert</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    {% for product in low_stock_products %}
+                    <a href="{% url 'product_detail' product.id %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ product.name }}</h6>
+                            <small class="text-danger">{{ product.stock_quantity }} left</small>
+                        </div>
+                        <small>Reorder Level: {{ product.reorder_level }}</small>
+                    </a>
+                    {% empty %}
+                    <p class="text-center mb-0">No products are low in stock</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sales Chart -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Sales Overview</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="salesChart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Sales Chart
+    var ctx = document.getElementById('salesChart').getContext('2d');
+    var salesChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: {{ dates|safe }},
+            datasets: [{
+                label: 'Sales',
+                data: {{ sales_data|safe }},
+                borderColor: 'rgb(75, 192, 192)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}
