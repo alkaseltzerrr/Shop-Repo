@@ -84,7 +84,13 @@ def dashboard(request):
 @login_required
 def product_list(request):
     products = Product.objects.select_related('category', 'supplier').all()
-    return render(request, 'store_ops/product_list.html', {'products': products})
+    categories = Category.objects.all()
+    suppliers = Supplier.objects.filter(active=True)
+    return render(request, 'store_ops/product_list.html', {
+        'products': products,
+        'categories': categories,
+        'suppliers': suppliers
+    })
 
 @login_required
 def product_add(request):
