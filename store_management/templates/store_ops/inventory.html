@@ -88,7 +88,31 @@
             <form method="post" action="{% url 'stock_in' %}">
                 <div class="modal-body">
                     {% csrf_token %}
-                    <!-- Stock in form fields here -->
+                    <div class="mb-3">
+                        <label for="product_in" class="form-label">Product</label>
+                        <select class="form-select" id="product_in" name="product" required>
+                            <option value="">Select Product</option>
+                            {% for product in products %}
+                            <option value="{{ product.id }}">{{ product.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="quantity_in" class="form-label">Quantity</label>
+                        <input type="number" class="form-control" id="quantity_in" name="quantity" min="1" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="supplier" class="form-label">Supplier</label>
+                        <input type="text" class="form-control" id="supplier" name="supplier" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="unit_cost" class="form-label">Unit Cost</label>
+                        <input type="number" class="form-control" id="unit_cost" name="unit_cost" min="0" step="0.01" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="notes_in" class="form-label">Notes</label>
+                        <textarea class="form-control" id="notes_in" name="notes" rows="3"></textarea>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -110,7 +134,23 @@
             <form method="post" action="{% url 'stock_out' %}">
                 <div class="modal-body">
                     {% csrf_token %}
-                    <!-- Stock out form fields here -->
+                    <div class="mb-3">
+                        <label for="product" class="form-label">Product</label>
+                        <select class="form-select" id="product" name="product" required>
+                            <option value="">Select Product</option>
+                            {% for product in products %}
+                            <option value="{{ product.id }}">{{ product.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="quantity" class="form-label">Quantity</label>
+                        <input type="number" class="form-control" id="quantity" name="quantity" min="1" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="reason" class="form-label">Reason</label>
+                        <textarea class="form-control" id="reason" name="reason" rows="3" required></textarea>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -133,7 +173,18 @@
             <form method="post" action="{% url 'adjust_stock' product.id %}">
                 <div class="modal-body">
                     {% csrf_token %}
-                    <!-- Adjust stock form fields here -->
+                    <div class="mb-3">
+                        <label for="current_stock{{ product.id }}" class="form-label">Current Stock</label>
+                        <input type="number" class="form-control" id="current_stock{{ product.id }}" value="{{ product.quantity }}" disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label for="new_stock{{ product.id }}" class="form-label">New Stock Level</label>
+                        <input type="number" class="form-control" id="new_stock{{ product.id }}" name="new_stock" min="0" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="adjustment_reason{{ product.id }}" class="form-label">Reason for Adjustment</label>
+                        <textarea class="form-control" id="adjustment_reason{{ product.id }}" name="reason" rows="3" required></textarea>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
