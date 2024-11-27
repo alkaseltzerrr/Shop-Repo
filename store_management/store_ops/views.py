@@ -82,6 +82,15 @@ def dashboard(request):
 
 # Product Views
 @login_required
+def product_detail(request, pk):
+    product = get_object_or_404(Product, pk=pk)
+    context = {
+        'product': product,
+        'stock_status': 'Low' if product.stock_quantity <= product.reorder_level else 'Normal',
+    }
+    return render(request, 'store_ops/product_detail.html', context)
+
+@login_required
 def product_list(request):
     products = Product.objects.select_related('category', 'supplier').all()
     categories = Category.objects.all()

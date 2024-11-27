@@ -154,15 +154,17 @@
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    // Sales Chart
     var ctx = document.getElementById('salesChart').getContext('2d');
+    var salesDates = JSON.parse('{{ dates|safe }}');
+    var salesValues = JSON.parse('{{ sales_data|safe }}');
+
     var salesChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: {{ dates|safe }},
+            labels: salesDates,
             datasets: [{
                 label: 'Sales',
-                data: {{ sales_data|safe }},
+                data: salesValues,
                 borderColor: 'rgb(75, 192, 192)',
                 tension: 0.1
             }]
