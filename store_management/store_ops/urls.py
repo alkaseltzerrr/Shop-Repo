@@ -19,6 +19,8 @@ urlpatterns = [
     path('sales/', views.sales, name='sales'),
     path('sales/process/', views.process_sale, name='process_sale'),
     path('sales/<int:pk>/details/', views.sale_details, name='sale_details'),
+    path('sales/<int:pk>/delete/', views.delete_sale, name='delete_sale'),
+    path('lookup_customer/', views.lookup_customer, name='lookup_customer'),
     
     path('customers/', views.customer_list, name='customer_list'),
     path('customers/add/', views.customer_add, name='customer_add'),
