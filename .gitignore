@@ -16,7 +16,7 @@ pythonenv*
 # Django
 *.log
 local_settings.py
-db.sqlite3
+store_management/db.sqlite3
 db.sqlite3-journal
 media
 

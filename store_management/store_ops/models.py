@@ -55,9 +55,11 @@ class Employee(models.Model):
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)
     phone = models.CharField(max_length=20)
     address = models.TextField()
-    hire_date = models.DateField()
+    hire_date = models.DateField(auto_now_add=True)  
     salary = models.DecimalField(max_digits=10, decimal_places=2)
     active = models.BooleanField(default=True)
+    date_of_birth = models.DateField(null=True, blank=True)  
+    emergency_contact = models.CharField(max_length=100, null=True, blank=True)  
 
     def __str__(self):
         return f"{self.user.get_full_name()} - {self.role}"
