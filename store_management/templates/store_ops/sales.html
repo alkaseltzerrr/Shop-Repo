@@ -1,9 +1,12 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load store_ops_extras %}
 
 {% block title %}Sales - Store Management System{% endblock %}
 
 {% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet" />
 <style>
     .product-item {
         cursor: pointer;
@@ -28,20 +31,27 @@
                     {% csrf_token %}
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <label class="form-label">Customer</label>
-                            <select class="form-select" name="customer" id="customerSelect">
-                                <option value="">Walk-in Customer</option>
-                                {% for customer in customers %}
-                                <option value="{{ customer.id }}">{{ customer.get_full_name }}</option>
-                                {% endfor %}
-                            </select>
+                            <label class="form-label">Customer (Full Name Required)</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="customerInput" 
+                                       placeholder="Enter full name (e.g. John Smith)">
+                                <input type="hidden" name="customer" id="customerId">
+                                <button class="btn btn-primary" type="button" id="checkCustomer">
+                                    <i class="fas fa-check"></i> Check
+                                </button>
+                                <button class="btn btn-outline-secondary" type="button" id="clearCustomer">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <small id="customerInfo" class="text-muted"></small>
+                            <div class="form-text text-muted">Please enter both first and last name for accurate lookup</div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Payment Method</label>
                             <select class="form-select" name="payment_method" required>
                                 <option value="CASH">Cash</option>
                                 <option value="CARD">Card</option>
-                                <option value="MOBILE">Mobile Payment</option>
+                                <option value="MOBILE">GCash Payment</option>
                             </select>
                         </div>
                     </div>
@@ -51,8 +61,8 @@
                             <thead>
                                 <tr>
                                     <th>Product</th>
+                                    <th>Price</th>
                                     <th>Quantity</th>
-                                    <th>Unit Price</th>
                                     <th>Subtotal</th>
                                     <th>Action</th>
                                 </tr>
@@ -63,17 +73,18 @@
                             <tfoot>
                                 <tr>
                                     <td colspan="3" class="text-end"><strong>Total:</strong></td>
-                                    <td><span id="totalAmount">$0.00</span></td>
+                                    <td><span id="totalAmount">₱0.00</span></td>
                                     <td></td>
                                 </tr>
                             </tfoot>
                         </table>
                     </div>
 
+                    <!-- Hidden input for sale items -->
+                    <input type="hidden" name="items" id="saleItemsInput">
+
                     <div class="d-grid">
-                        <button type="submit" class="btn btn-primary" id="processSaleBtn" disabled>
-                            Process Sale
-                        </button>
+                        <button type="submit" class="btn btn-primary" id="processSaleBtn" disabled>Process Sale</button>
                     </div>
                 </form>
             </div>
@@ -85,37 +96,33 @@
                 <h5 class="card-title mb-0">Recent Sales</h5>
             </div>
             <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover">
+                <div class="table-responsive mt-4">
+                    <h4>Recent Sales</h4>
+                    <table class="table table-striped">
                         <thead>
                             <tr>
-                                <th>Invoice</th>
-                                <th>Customer</th>
-                                <th>Items</th>
-                                <th>Total</th>
-                                <th>Payment</th>
                                 <th>Date</th>
+                                <th>Customer</th>
+                                <th>Total Amount</th>
+                                <th>Payment Method</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for sale in sales %}
+                            {% for sale in recent_sales %}
                             <tr>
-                                <td>#{{ sale.id }}</td>
-                                <td>{{ sale.customer.get_full_name|default:"Walk-in Customer" }}</td>
-                                <td>{{ sale.items.count }} items</td>
-                                <td>${{ sale.total_amount }}</td>
-                                <td>{{ sale.get_payment_method_display }}</td>
-                                <td>{{ sale.sale_date|date:"M d, Y H:i" }}</td>
+                                <td>{{ sale.sale_date|date:"Y-m-d H:i" }}</td>
+                                <td>{{ sale.customer.first_name }} {{ sale.customer.last_name }}</td>
+                                <td>₱{{ sale.total_amount|floatformat:2 }}</td>
+                                <td>{{ sale.payment_method|get_payment_method_display }}</td>
                                 <td>
-                                    <button class="btn btn-sm btn-info" onclick="viewSaleDetails({{ sale.id }})">
-                                        <i class="fas fa-eye"></i>
+                                    <a href="{% url 'sale_details' sale.id %}" class="btn btn-info btn-sm">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                    <button class="btn btn-danger btn-sm delete-sale" data-sale-id="{{ sale.id }}">
+                                        <i class="fas fa-trash"></i> Delete
                                     </button>
                                 </td>
-                            </tr>
-                            {% empty %}
-                            <tr>
-                                <td colspan="7" class="text-center">No recent sales</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -129,27 +136,29 @@
     <div class="col-md-4">
         <div class="card">
             <div class="card-header">
-                <div class="input-group">
+                <h5 class="card-title mb-0">Products</h5>
+                <div class="input-group mt-2">
                     <input type="text" class="form-control" id="productSearch" placeholder="Search products...">
-                    <button class="btn btn-outline-secondary" type="button">
-                        <i class="fas fa-search"></i>
-                    </button>
                 </div>
             </div>
-            <div class="card-body p-0">
-                <div class="list-group list-group-flush" id="productsList">
+            <div class="card-body" style="max-height: 600px; overflow-y: auto;">
+                <div class="list-group">
                     {% for product in products %}
-                    <a href="#" class="list-group-item list-group-item-action product-item" 
-                       data-id="{{ product.id }}"
-                       data-name="{{ product.name }}"
-                       data-price="{{ product.price }}"
-                       data-stock="{{ product.stock_quantity }}">
-                        <div class="d-flex w-100 justify-content-between">
-                            <h6 class="mb-1">{{ product.name }}</h6>
-                            <small>${{ product.price }}</small>
+                    <div class="list-group-item product-item" 
+                         data-id="{{ product.id }}"
+                         data-name="{{ product.name }}"
+                         data-price="{{ product.price }}"
+                         data-stock="{{ product.stock_quantity }}">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">{{ product.name }}</h6>
+                                <small class="text-muted">Stock: {{ product.stock_quantity }}</small>
+                            </div>
+                            <div class="text-end">
+                                <div class="fw-bold">₱{{ product.price }}</div>
+                            </div>
                         </div>
-                        <small class="text-muted">Stock: {{ product.stock_quantity }}</small>
-                    </a>
+                    </div>
                     {% endfor %}
                 </div>
             </div>
@@ -180,100 +189,255 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
     // Initialize variables
     let saleItems = [];
-    const products = {{ products_json|safe }};
 
-    // Add product to sale
-    function addProduct(productId, productName, price, stock) {
-        const quantity = 1;
-        const subtotal = price * quantity;
-        
-        const row = `
-            <tr data-product-id="${productId}">
-                <td>${productName}</td>
-                <td>
-                    <input type="number" class="form-control form-control-sm quantity-input" 
-                           value="${quantity}" min="1" max="${stock}"
-                           onchange="updateQuantity(${productId}, this.value)">
-                </td>
-                <td>$${price.toFixed(2)}</td>
-                <td>$${subtotal.toFixed(2)}</td>
-                <td>
-                    <button type="button" class="btn btn-sm btn-danger" onclick="removeItem(${productId})">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </td>
-            </tr>
-        `;
-        
-        $('#saleItems tbody').append(row);
-        updateTotal();
-        $('#processSaleBtn').prop('disabled', false);
-    }
-
-    // Update quantity
-    function updateQuantity(productId, quantity) {
-        const row = $(`tr[data-product-id="${productId}"]`);
-        const price = parseFloat(row.find('td:eq(2)').text().replace('$', ''));
-        const subtotal = price * quantity;
-        row.find('td:eq(3)').text(`$${subtotal.toFixed(2)}`);
-        updateTotal();
-    }
-
-    // Remove item
-    function removeItem(productId) {
-        $(`tr[data-product-id="${productId}"]`).remove();
-        updateTotal();
-        if ($('#saleItems tbody tr').length === 0) {
-            $('#processSaleBtn').prop('disabled', true);
-        }
-    }
-
-    // Update total amount
-    function updateTotal() {
-        let total = 0;
-        $('#saleItems tbody tr').each(function() {
-            const subtotal = parseFloat($(this).find('td:eq(3)').text().replace('$', ''));
-            total += subtotal;
+    $(document).ready(function() {
+        // Customer search handlers
+        $('#checkCustomer').on('click', function() {
+            const query = $('#customerInput').val().trim();
+            if (query) {
+                lookupCustomer(query);
+            }
         });
-        $('#totalAmount').text(`$${total.toFixed(2)}`);
-    }
 
-    // Product search
-    $('#productSearch').on('input', function() {
-        const searchTerm = $(this).val().toLowerCase();
-        $('.product-item').each(function() {
-            const productName = $(this).find('h6').text().toLowerCase();
-            $(this).toggle(productName.includes(searchTerm));
+        // Clear customer button handler
+        $('#clearCustomer').on('click', clearCustomerInfo);
+
+        // Product search handler
+        $('#productSearch').on('input', function() {
+            const query = $(this).val().toLowerCase();
+            $('.product-item').each(function() {
+                const name = $(this).data('name').toLowerCase();
+                $(this).toggle(name.includes(query));
+            });
         });
-    });
 
-    // Add product when clicked
-    $('.product-item').click(function() {
-        const productId = $(this).data('id');
-        const productName = $(this).data('name');
-        const price = $(this).data('price');
-        const stock = $(this).data('stock');
-        
-        if ($(`tr[data-product-id="${productId}"]`).length === 0) {
+        // Product item click handler
+        $('.product-item').on('click', function() {
+            const productId = $(this).data('id');
+            const productName = $(this).data('name');
+            const price = $(this).data('price');
+            const stock = $(this).data('stock');
             addProduct(productId, productName, price, stock);
+        });
+
+        function validateSaleForm() {
+            if (saleItems.length === 0) {
+                alert('Please add at least one product to the sale.');
+                return false;
+            }
+            return true;
         }
+
+        // Process sale form submission
+        $('#saleForm').on('submit', function(e) {
+            e.preventDefault();
+            
+            if (!validateSaleForm()) return;
+            
+            // Prepare form data
+            const formData = new FormData(this);
+            formData.set('items', JSON.stringify(saleItems));
+
+            // Disable submit button
+            $('#processSaleBtn').prop('disabled', true).html(
+                '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...'
+            );
+            
+            $.ajax({
+                url: $(this).attr('action'),
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    if (response.status === 'success') {
+                        // Reset form
+                        saleItems = [];
+                        updateSaleItemsTable();
+                        updateTotal();
+                        clearCustomerInfo();
+                        
+                        // Show success message and refresh page
+                        alert('Sale processed successfully!');
+                        window.location.reload();
+                    } else {
+                        alert(response.message || 'Error processing sale');
+                    }
+                },
+                error: function(xhr) {
+                    alert('Error processing sale. Please try again.');
+                },
+                complete: function() {
+                    // Re-enable submit button
+                    $('#processSaleBtn').prop('disabled', false).html('Process Sale');
+                }
+            });
+        });
+
+        // Delete sale button handler
+        $('.delete-sale').on('click', function() {
+            const saleId = $(this).data('sale-id');
+            if (confirm('Are you sure you want to delete this sale?')) {
+                $.ajax({
+                    url: `/store_ops/sales/${saleId}/delete/`,
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            window.location.reload();
+                        } else {
+                            alert(response.message || 'Error deleting sale');
+                        }
+                    },
+                    error: function() {
+                        alert('Error deleting sale');
+                    }
+                });
+            }
+        });
     });
 
-    // View sale details
-    function viewSaleDetails(saleId) {
-        // Load sale details via AJAX
-        $.get(`/sales/${saleId}/details/`, function(data) {
-            $('#saleDetailsModal .modal-body').html(data);
-            $('#saleDetailsModal').modal('show');
+    function lookupCustomer(query) {
+        $.ajax({
+            url: '{% url "lookup_customer" %}',
+            data: { query: query },
+            success: function(response) {
+                const results = response.results;
+                if (results.length > 0) {
+                    const customer = results[0];
+                    $('#customerId').val(customer.id);
+                    $('#customerInfo').html(
+                        `<strong>Found:</strong> ${customer.name}<br>` +
+                        `<strong>Email:</strong> ${customer.email}<br>` +
+                        `<strong>Phone:</strong> ${customer.phone}`
+                    );
+                    $('#customerInfo').removeClass('text-danger').addClass('text-success');
+                    $('#processSaleBtn').prop('disabled', false);
+                } else {
+                    $('#customerId').val('');
+                    $('#customerInfo').html('No customer found with this name');
+                    $('#customerInfo').removeClass('text-success').addClass('text-danger');
+                    $('#processSaleBtn').prop('disabled', true);
+                }
+            },
+            error: function() {
+                $('#customerInfo').html('Error looking up customer');
+                $('#customerInfo').removeClass('text-success').addClass('text-danger');
+                $('#processSaleBtn').prop('disabled', true);
+            }
         });
     }
 
-    // Print invoice
-    function printInvoice() {
-        window.print();
+    function clearCustomerInfo() {
+        $('#customerInput').val('');
+        $('#customerId').val('');
+        $('#customerInfo').html('');
+        $('#processSaleBtn').prop('disabled', true);
+    }
+
+    function addProduct(productId, productName, price, stock) {
+        // Check if product already exists in sale
+        const existingItem = saleItems.find(item => item.product_id === productId);
+        if (existingItem) {
+            alert('This product is already in the sale. Please adjust the quantity in the table.');
+            return;
+        }
+
+        // Add new item
+        saleItems.push({
+            product_id: productId,
+            name: productName,
+            price: parseFloat(price),
+            quantity: 1,
+            stock: stock
+        });
+
+        updateSaleItemsTable();
+        updateTotal();
+    }
+
+    function updateSaleItemsTable() {
+        const tbody = $('#saleItems tbody');
+        tbody.empty();
+
+        saleItems.forEach(item => {
+            const row = `
+                <tr data-product-id="${item.product_id}">
+                    <td>${item.name}</td>
+                    <td>₱${item.price.toFixed(2)}</td>
+                    <td>
+                        <div class="input-group input-group-sm" style="width: 120px;">
+                            <button class="btn btn-outline-secondary" type="button" 
+                                onclick="updateQuantity(${item.product_id}, Math.max(1, parseInt($('#quantity_${item.product_id}').val()) - 1))">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                            <input type="number" class="form-control text-center" id="quantity_${item.product_id}" 
+                                value="${item.quantity}" min="1" max="${item.stock}"
+                                onchange="updateQuantity(${item.product_id}, this.value)">
+                            <button class="btn btn-outline-secondary" type="button" 
+                                onclick="updateQuantity(${item.product_id}, Math.min(${item.stock}, parseInt($('#quantity_${item.product_id}').val()) + 1))">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    </td>
+                    <td>₱${(item.price * item.quantity).toFixed(2)}</td>
+                    <td>
+                        <button type="button" class="btn btn-danger btn-sm" onclick="removeItem(${item.product_id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+            tbody.append(row);
+        });
+
+        // Update hidden input with sale items
+        $('#saleItemsInput').val(JSON.stringify(saleItems));
+    }
+
+    function updateQuantity(productId, quantity) {
+        const item = saleItems.find(item => item.product_id === productId);
+        if (item) {
+            quantity = parseInt(quantity);
+            if (isNaN(quantity) || quantity < 1) quantity = 1;
+            if (quantity > item.stock) quantity = item.stock;
+            
+            item.quantity = quantity;
+            updateSaleItemsTable();
+            updateTotal();
+        }
+    }
+
+    function removeItem(productId) {
+        saleItems = saleItems.filter(item => item.product_id !== productId);
+        updateSaleItemsTable();
+        updateTotal();
+    }
+
+    function updateTotal() {
+        const total = saleItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        $('#totalAmount').text(`₱${total.toFixed(2)}`);
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
     }
 </script>
 {% endblock %}

@@ -1,67 +1,36 @@
 {% extends 'base.html' %}
-{% load static %}
-
-{% block title %}Sale Details - Store Management System{% endblock %}
+{% load store_ops_extras %}
 
 {% block content %}
 <div class="container mt-4">
     <div class="card">
         <div class="card-header">
-            <div class="d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Sale Invoice #{{ sale.id }}</h5>
-                <div>
-                    <button class="btn btn-primary" onclick="window.print()">
-                        <i class="fas fa-print"></i> Print
-                    </button>
-                </div>
-            </div>
+            <h3 class="card-title mb-0">
+                Sale Details
+                <small class="text-muted">#{{ sale.id }}</small>
+            </h3>
         </div>
         <div class="card-body">
             <div class="row mb-4">
-                <div class="col-sm-6">
-                    <h6 class="mb-3">From:</h6>
-                    <div>
-                        <strong>Your Store Name</strong>
-                    </div>
-                    <div>123 Store Street</div>
-                    <div>City, State 12345</div>
-                    <div>Phone: (123) 456-7890</div>
-                    <div>Email: store@example.com</div>
-                </div>
-
-                <div class="col-sm-6">
-                    <h6 class="mb-3">To:</h6>
+                <div class="col-md-6">
+                    <h5>Customer Information</h5>
                     {% if sale.customer %}
-                    <div>
-                        <strong>{{ sale.customer.get_full_name }}</strong>
-                    </div>
-                    <div>{{ sale.customer.address }}</div>
-                    <div>Phone: {{ sale.customer.phone }}</div>
-                    <div>Email: {{ sale.customer.email }}</div>
+                        <p><strong>Name:</strong> {{ sale.customer.first_name }} {{ sale.customer.last_name }}</p>
+                        <p><strong>Phone:</strong> {{ sale.customer.phone }}</p>
+                        <p><strong>Email:</strong> {{ sale.customer.email }}</p>
                     {% else %}
-                    <div>
-                        <strong>Walk-in Customer</strong>
-                    </div>
+                        <p>Walk-in Customer</p>
                     {% endif %}
                 </div>
+                <div class="col-md-6">
+                    <h5>Sale Information</h5>
+                    <p><strong>Date:</strong> {{ sale.date|date:"F d, Y H:i" }}</p>
+                    <p><strong>Payment Method:</strong> {{ sale.payment_method|get_payment_method_display }}</p>
+                    <p><strong>Total Amount:</strong> ₱{{ sale.total_amount|floatformat:2 }}</p>
+                </div>
             </div>
 
-            <div class="row mb-4">
-                <div class="col-sm-6">
-                    <div><strong>Sale Date:</strong> {{ sale.sale_date|date:"M d, Y H:i" }}</div>
-                    <div><strong>Payment Method:</strong> {{ sale.get_payment_method_display }}</div>
-                    <div><strong>Processed by:</strong> {{ sale.employee.user.get_full_name }}</div>
-                </div>
-                {% if sale.customer %}
-                <div class="col-sm-6">
-                    <div>
-                        <strong>Loyalty Points Earned:</strong> 
-                        {{ sale.total_amount|floatformat:"0" }} points
-                    </div>
-                </div>
-                {% endif %}
-            </div>
-
+            <h5>Items</h5>
             <div class="table-responsive">
                 <table class="table table-striped">
                     <thead>
@@ -69,7 +38,7 @@
                             <th>Product</th>
                             <th>Quantity</th>
                             <th>Unit Price</th>
-                            <th class="text-end">Subtotal</th>
+                            <th>Subtotal</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -77,50 +46,73 @@
                         <tr>
                             <td>{{ item.product.name }}</td>
                             <td>{{ item.quantity }}</td>
-                            <td>${{ item.unit_price|floatformat:2 }}</td>
-                            <td class="text-end">${{ item.subtotal|floatformat:2 }}</td>
+                            <td>₱{{ item.unit_price|floatformat:2 }}</td>
+                            <td>₱{{ item.subtotal|floatformat:2 }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
                     <tfoot>
                         <tr>
                             <td colspan="3" class="text-end"><strong>Total:</strong></td>
-                            <td class="text-end"><strong>${{ sale.total_amount|floatformat:2 }}</strong></td>
+                            <td><strong>₱{{ sale.total_amount|floatformat:2 }}</strong></td>
                         </tr>
                     </tfoot>
                 </table>
             </div>
 
-            <div class="row">
-                <div class="col-12">
-                    <p class="text-center mt-4 mb-0">
-                        Thank you for your business!
-                    </p>
-                </div>
+            <div class="mt-4">
+                <a href="{% url 'sales' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Sales
+                </a>
+                <button class="btn btn-danger delete-sale" data-sale-id="{{ sale.id }}">
+                    <i class="fas fa-trash"></i> Delete Sale
+                </button>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
 
-{% block extra_css %}
-<style>
-    @media print {
-        body * {
-            visibility: hidden;
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    $('.delete-sale').on('click', function() {
+        const saleId = $(this).data('sale-id');
+        if (confirm('Are you sure you want to delete this sale?')) {
+            $.ajax({
+                url: `/store_ops/sale/${saleId}/delete/`,
+                type: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                success: function(response) {
+                    if (response.success) {
+                        window.location.href = '{% url "sales" %}';
+                    } else {
+                        alert(response.message || 'Error deleting sale');
+                    }
+                },
+                error: function() {
+                    alert('Error deleting sale');
+                }
+            });
         }
-        .card, .card * {
-            visibility: visible;
-        }
-        .card {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-        }
-        .btn {
-            display: none;
+    });
+});
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
         }
     }
-</style>
-{% endblock %}
+    return cookieValue;
+}
+</script>
 {% endblock %}

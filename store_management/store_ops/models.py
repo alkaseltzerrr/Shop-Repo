@@ -74,6 +74,9 @@ class Customer(models.Model):
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
 
+    def get_full_name(self):
+        return f"{self.first_name} {self.last_name}"
+
 class Purchase(models.Model):
     supplier = models.ForeignKey(Supplier, on_delete=models.PROTECT)
     product = models.ForeignKey(Product, on_delete=models.PROTECT)
@@ -95,16 +98,14 @@ class Sale(models.Model):
     PAYMENT_CHOICES = [
         ('CASH', 'Cash'),
         ('CARD', 'Card'),
-        ('MOBILE', 'Mobile Payment'),
+        ('MOBILE', 'GCash Payment'),
     ]
-
-    customer = models.ForeignKey(Customer, on_delete=models.PROTECT, null=True, blank=True)
-    employee = models.ForeignKey(Employee, on_delete=models.PROTECT)
+    
+    customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True, blank=True)
     sale_date = models.DateTimeField(auto_now_add=True)
-    payment_method = models.CharField(max_length=10, choices=PAYMENT_CHOICES)
     total_amount = models.DecimalField(max_digits=12, decimal_places=2)
-    points_earned = models.IntegerField(default=0)
-
+    payment_method = models.CharField(max_length=10, choices=PAYMENT_CHOICES, default='CASH')
+    
     def __str__(self):
         return f"Sale {self.id} - {self.sale_date.strftime('%Y-%m-%d %H:%M')}"
 
@@ -114,10 +115,10 @@ class SaleItem(models.Model):
     quantity = models.IntegerField(validators=[MinValueValidator(1)])
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
     subtotal = models.DecimalField(max_digits=12, decimal_places=2)
-
+    
     def save(self, *args, **kwargs):
         self.subtotal = self.quantity * self.unit_price
         super().save(*args, **kwargs)
-
+    
     def __str__(self):
         return f"{self.product.name} x {self.quantity}"

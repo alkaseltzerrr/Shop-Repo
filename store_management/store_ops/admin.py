@@ -42,9 +42,9 @@ class PurchaseAdmin(admin.ModelAdmin):
 
 @admin.register(Sale)
 class SaleAdmin(admin.ModelAdmin):
-    list_display = ('id', 'customer', 'employee', 'total_amount', 'payment_method', 'sale_date')
+    list_display = ('id', 'customer', 'total_amount', 'payment_method', 'sale_date')
     list_filter = ('payment_method', 'sale_date')
-    search_fields = ('customer__first_name', 'customer__last_name', 'employee__user__username')
+    search_fields = ('customer__first_name', 'customer__last_name')
 
 @admin.register(SaleItem)
 class SaleItemAdmin(admin.ModelAdmin):

@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.db.models import Sum, Count, F
+from django.db.models import Sum, Count, F, Q
 from django.utils import timezone
 from django.contrib.auth.models import User
 from datetime import datetime, timedelta
@@ -11,6 +11,7 @@ from .models import (
     Customer, Purchase, Sale, SaleItem
 )
 from .forms import AdminRegistrationForm  # Add this import
+from django.http import JsonResponse
 
 # Dashboard View
 @login_required
@@ -222,73 +223,129 @@ def adjust_stock(request, pk):
 
 # Sales Views
 @login_required
-def sales(request):
+def lookup_customer(request):
+    if request.method == 'GET':
+        query = request.GET.get('query', '').strip()
+        if query:
+            # Split the query into words
+            words = query.split()
+            
+            # Only proceed if we have at least 2 words (first name and last name)
+            if len(words) >= 2:
+                # Last word is the last name
+                last_name = words[-1]
+                # Everything before the last word is the first name
+                first_name = ' '.join(words[:-1])
+                
+                # Only search for exact matches
+                customers = Customer.objects.filter(
+                    first_name__iexact=first_name,
+                    last_name__iexact=last_name
+                )[:5]
+                
+                results = []
+                for customer in customers:
+                    results.append({
+                        'id': customer.id,
+                        'name': customer.get_full_name(),
+                        'email': customer.email,
+                        'phone': customer.phone
+                    })
+                return JsonResponse({'results': results})
+            
+    return JsonResponse({'results': []})
+
+@login_required
+def delete_sale(request, pk):
+    sale = get_object_or_404(Sale, pk=pk)
     if request.method == 'POST':
-        # Process sale form
-        pass
-    recent_sales = Sale.objects.select_related(
-        'customer', 'employee'
-    ).order_by('-sale_date')[:50]
-    return render(request, 'store_ops/sales.html', {'sales': recent_sales})
+        try:
+            # Return products to inventory
+            for item in sale.items.all():
+                product = item.product
+                product.stock_quantity += item.quantity
+                product.save()
+            
+            sale.delete()
+            return JsonResponse({'status': 'success'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'})
+
+@login_required
+def sales(request):
+    recent_sales = Sale.objects.select_related('customer').order_by('-sale_date')[:50]
+    products = Product.objects.all().order_by('name')
+    context = {
+        'recent_sales': recent_sales,
+        'products': products,
+    }
+    return render(request, 'store_ops/sales.html', context)
 
 @login_required
 def process_sale(request):
     if request.method == 'POST':
         try:
-            # Create sale record
-            customer = None
-            if request.POST.get('customer'):
-                customer = Customer.objects.get(id=request.POST.get('customer'))
-            
+            data = json.loads(request.POST.get('items'))
+            customer_id = request.POST.get('customer')
+            payment_method = request.POST.get('payment_method')
+
+            # Create sale
             sale = Sale.objects.create(
-                customer=customer,
-                employee=request.user.employee,
-                payment_method=request.POST.get('payment_method'),
-                total_amount=0
+                customer_id=customer_id if customer_id else None,
+                payment_method=payment_method,
+                total_amount=0  # Will be updated after adding items
             )
-            
-            # Process sale items
-            items_data = json.loads(request.POST.get('items'))
+
             total_amount = 0
-            
-            for item in items_data:
+            # Process each item
+            for item in data:
                 product = Product.objects.get(id=item['product_id'])
                 quantity = int(item['quantity'])
                 
-                if product.stock_quantity >= quantity:
-                    product.stock_quantity -= quantity
-                    product.save()
-                    
-                    subtotal = quantity * product.price
-                    total_amount += subtotal
-                    
-                    SaleItem.objects.create(
-                        sale=sale,
-                        product=product,
-                        quantity=quantity,
-                        unit_price=product.price,
-                        subtotal=subtotal
-                    )
-                else:
+                # Check stock
+                if product.stock_quantity < quantity:
                     sale.delete()
-                    messages.error(request, f'Insufficient stock for {product.name}')
-                    return redirect('sales')
+                    return JsonResponse({
+                        'status': 'error',
+                        'message': f'Insufficient stock for {product.name}'
+                    })
+                
+                # Create sale item
+                SaleItem.objects.create(
+                    sale=sale,
+                    product=product,
+                    quantity=quantity,
+                    unit_price=product.price,
+                    subtotal=product.price * quantity
+                )
+                
+                # Update stock
+                product.stock_quantity -= quantity
+                product.save()
+                
+                total_amount += product.price * quantity
             
-            # Update sale total and customer loyalty points
+            # Update sale total
             sale.total_amount = total_amount
             sale.save()
             
-            if customer:
-                points_earned = int(total_amount)
-                customer.loyalty_points += points_earned
-                customer.save()
-            
-            messages.success(request, f'Sale #{sale.id} processed successfully')
-            return redirect('sale_details', pk=sale.id)
+            messages.success(request, 'Sale processed successfully')
+            return JsonResponse({
+                'status': 'success',
+                'sale_id': sale.id
+            })
             
         except Exception as e:
-            messages.error(request, f'Error processing sale: {str(e)}')
-    return redirect('sales')
+            return JsonResponse({
+                'status': 'error',
+                'message': str(e)
+            })
+    
+    return JsonResponse({
+        'status': 'error',
+        'message': 'Invalid request method'
+    })
 
 @login_required
 def sale_details(request, pk):
