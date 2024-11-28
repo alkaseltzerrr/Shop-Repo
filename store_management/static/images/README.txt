@@ -1,0 +1,1 @@
+The logo for the store management system is placed in this directory.

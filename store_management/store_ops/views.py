@@ -10,6 +10,7 @@ from .models import (
     Category, Product, Supplier, Employee,
     Customer, Purchase, Sale, SaleItem
 )
+from .forms import AdminRegistrationForm  # Add this import
 
 # Dashboard View
 @login_required
@@ -496,3 +497,19 @@ def profile(request):
         'employee': employee
     }
     return render(request, 'store_ops/profile.html', context)
+
+def register(request):
+    if request.method == 'POST':
+        form = AdminRegistrationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            return redirect('login')
+    else:
+        form = AdminRegistrationForm()
+    return render(request, 'registration/register.html', {'form': form})
+
+from django.contrib.auth import logout
+
+def custom_logout(request):
+    logout(request)
+    return redirect('login')

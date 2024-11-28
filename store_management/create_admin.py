@@ -9,13 +9,11 @@ django.setup()
 from django.contrib.auth.models import User
 from store_ops.models import Employee
 
-# Create superuser
 username = 'admin'
 email = 'admin@example.com'
 password = 'admin123'
 
 try:
-    # Create superuser if it doesn't exist
     if not User.objects.filter(username=username).exists():
         superuser = User.objects.create_superuser(
             username=username,
@@ -25,14 +23,13 @@ try:
             last_name='User'
         )
         
-        # Create employee profile for superuser
         Employee.objects.create(
             user=superuser,
             phone='1234567890',
             role='MANAGER',
             active=True,
             hire_date=timezone.now(),
-            salary=Decimal('5000.00')  # Default salary for admin
+            salary=Decimal('5000.00')  
         )
         
         print(f"""
