@@ -215,6 +215,11 @@ def stock_in(request):
         try:
             product = Product.objects.get(id=request.POST.get('product'))
             quantity = int(request.POST.get('quantity'))
+            unit_cost = request.POST.get('unit_cost')
+            
+            if not unit_cost:
+                raise ValueError("Unit cost is required")
+                
             product.stock_quantity += quantity
             product.save()
             
@@ -222,11 +227,13 @@ def stock_in(request):
                 product=product,
                 supplier=product.supplier,
                 quantity=quantity,
-                unit_price=float(request.POST.get('unit_price')),
-                total_amount=quantity * float(request.POST.get('unit_price')),
+                unit_price=Decimal(str(unit_cost)),
+                total_amount=Decimal(str(unit_cost)) * Decimal(str(quantity)),
                 received=True
             )
             messages.success(request, f'Successfully added {quantity} units to {product.name}')
+        except ValueError as e:
+            messages.error(request, str(e))
         except Exception as e:
             messages.error(request, f'Error processing stock in: {str(e)}')
     return redirect('inventory')
