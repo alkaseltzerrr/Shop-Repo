@@ -16,7 +16,7 @@
         background-color: #f8f9fa;
     }
 </style>
-{% endblock %}
+{% endblock extra_css %}
 
 {% block content %}
 <div class="row">
@@ -112,16 +112,27 @@
                             {% for sale in recent_sales %}
                             <tr>
                                 <td>{{ sale.sale_date|date:"Y-m-d H:i" }}</td>
-                                <td>{{ sale.customer.first_name }} {{ sale.customer.last_name }}</td>
+                                <td>
+                                    {% if sale.customer %}
+                                        {{ sale.customer.first_name }} {{ sale.customer.last_name }}
+                                    {% else %}
+                                        Walk-in Customer
+                                    {% endif %}
+                                </td>
                                 <td>₱{{ sale.total_amount|floatformat:2 }}</td>
                                 <td>{{ sale.payment_method|get_payment_method_display }}</td>
                                 <td>
-                                    <a href="{% url 'sale_details' sale.id %}" class="btn btn-info btn-sm">
-                                        <i class="fas fa-eye"></i> View
-                                    </a>
-                                    <button class="btn btn-danger btn-sm delete-sale" data-sale-id="{{ sale.id }}">
-                                        <i class="fas fa-trash"></i> Delete
+                                    <button type="button" class="btn btn-sm btn-info view-sale" 
+                                            data-bs-toggle="modal" data-bs-target="#saleDetailsModal" 
+                                            data-sale-id="{{ sale.id }}">
+                                        <i class="fas fa-eye"></i>
                                     </button>
+                                    {% if user.employee.role == 'MANAGER' %}
+                                    <button type="button" class="btn btn-sm btn-danger delete-sale" 
+                                            data-sale-id="{{ sale.id }}" data-bs-toggle="modal" data-bs-target="#deleteConfirmModal">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                    {% endif %}
                                 </td>
                             </tr>
                             {% endfor %}
@@ -166,27 +177,76 @@
     </div>
 </div>
 
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete Sale</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this sale? This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDelete">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Sale Details Modal -->
 <div class="modal fade" id="saleDetailsModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Sale Details</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <!-- Sale details will be loaded here -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Sale Information</h6>
+                        <p class="mb-1"><strong>Sale ID:</strong> <span id="saleId"></span></p>
+                        <p class="mb-1"><strong>Date:</strong> <span id="saleDate"></span></p>
+                        <p class="mb-1"><strong>Payment Method:</strong> <span id="paymentMethod"></span></p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Customer Information</h6>
+                        <p class="mb-1"><strong>Name:</strong> <span id="customerName"></span></p>
+                        <p class="mb-1"><strong>Email:</strong> <span id="customerEmail"></span></p>
+                        <p class="mb-1"><strong>Phone:</strong> <span id="customerPhone"></span></p>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover" id="saleItemsTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Product</th>
+                                <th>Quantity</th>
+                                <th>Unit Price</th>
+                                <th>Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                                <td><strong id="saleTotal"></strong></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" onclick="printInvoice()">
-                    <i class="fas fa-print"></i> Print Invoice
-                </button>
             </div>
         </div>
     </div>
 </div>
-{% endblock %}
+{% endblock content %}
 
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
@@ -200,6 +260,17 @@
             const query = $('#customerInput').val().trim();
             if (query) {
                 lookupCustomer(query);
+            }
+        });
+
+        // Customer input enter key handler
+        $('#customerInput').on('keypress', function(e) {
+            if (e.which === 13) {  // Enter key
+                e.preventDefault();
+                const query = $(this).val().trim();
+                if (query) {
+                    lookupCustomer(query);
+                }
             }
         });
 
@@ -281,163 +352,240 @@
         // Delete sale button handler
         $('.delete-sale').on('click', function() {
             const saleId = $(this).data('sale-id');
-            if (confirm('Are you sure you want to delete this sale?')) {
-                $.ajax({
-                    url: `/store_ops/sales/${saleId}/delete/`,
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': getCookie('csrftoken')
-                    },
-                    success: function(response) {
-                        if (response.status === 'success') {
-                            window.location.reload();
-                        } else {
-                            alert(response.message || 'Error deleting sale');
-                        }
-                    },
-                    error: function() {
-                        alert('Error deleting sale');
-                    }
-                });
-            }
+            $('#deleteConfirmModal').data('sale-id', saleId);
         });
-    });
 
-    function lookupCustomer(query) {
-        $.ajax({
-            url: '{% url "lookup_customer" %}',
-            data: { query: query },
-            success: function(response) {
-                const results = response.results;
-                if (results.length > 0) {
-                    const customer = results[0];
-                    $('#customerId').val(customer.id);
-                    $('#customerInfo').html(
-                        `<strong>Found:</strong> ${customer.name}<br>` +
-                        `<strong>Email:</strong> ${customer.email}<br>` +
-                        `<strong>Phone:</strong> ${customer.phone}`
-                    );
-                    $('#customerInfo').removeClass('text-danger').addClass('text-success');
-                    $('#processSaleBtn').prop('disabled', false);
-                } else {
-                    $('#customerId').val('');
-                    $('#customerInfo').html('No customer found with this name');
+        // Confirm delete handler
+        $('#confirmDelete').on('click', function() {
+            const saleId = $('#deleteConfirmModal').data('sale-id');
+            $.ajax({
+                url: `/sales/${saleId}/delete/`,
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                success: function(response) {
+                    $('#deleteConfirmModal').modal('hide');
+                    if (response.status === 'success') {
+                        location.reload();
+                    } else {
+                        alert(response.message || 'Error deleting sale');
+                    }
+                },
+                error: function(xhr) {
+                    $('#deleteConfirmModal').modal('hide');
+                    const response = xhr.responseJSON || {};
+                    alert(response.message || 'Error deleting sale. Please try again.');
+                }
+            });
+        });
+
+        // View sale details
+        $('.view-sale').on('click', function() {
+            var saleId = $(this).data('sale-id');
+            $.ajax({
+                url: `/sales/${saleId}/details/`,
+                method: 'GET',
+                success: function(data) {
+                    $('#saleId').text(data.id);
+                    $('#saleDate').text(data.date);
+                    $('#paymentMethod').text(data.payment_method);
+                    
+                    // Handle customer information
+                    $('#customerName').text(data.customer || 'Walk-in Customer');
+                    $('#customerEmail').text(data.customer_email || 'N/A');
+                    $('#customerPhone').text(data.customer_phone || 'N/A');
+                    
+                    // Update items table
+                    var tbody = $('#saleItemsTable tbody');
+                    tbody.empty();
+                    data.items.forEach(function(item) {
+                        tbody.append(`
+                            <tr>
+                                <td>${item.product_name}</td>
+                                <td>${item.quantity}</td>
+                                <td>₱${item.unit_price.toFixed(2)}</td>
+                                <td>₱${item.subtotal.toFixed(2)}</td>
+                            </tr>
+                        `);
+                    });
+                    
+                    $('#saleTotal').text(`₱${data.total_amount.toFixed(2)}`);
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error fetching sale details:', error);
+                    alert('Error loading sale details. Please try again.');
+                }
+            });
+        });
+
+        function lookupCustomer(query) {
+            $.ajax({
+                url: '/lookup_customer/',  
+                method: 'GET',
+                data: { query: query },
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                success: function(response) {
+                    const results = response.results;
+                    if (results.length > 0) {
+                        const customer = results[0];
+                        $('#customerId').val(customer.id);
+                        $('#customerInfo').html(
+                            `<strong>Found:</strong> ${customer.name}<br>` +
+                            `<strong>Email:</strong> ${customer.email || 'N/A'}<br>` +
+                            `<strong>Phone:</strong> ${customer.phone || 'N/A'}`
+                        );
+                        $('#customerInfo').removeClass('text-danger').addClass('text-success');
+                        $('#processSaleBtn').prop('disabled', false);
+                    } else {
+                        $('#customerId').val('');
+                        $('#customerInfo').html('No customer found with this name. Please enter full name (e.g. John Smith)');
+                        $('#customerInfo').removeClass('text-success').addClass('text-danger');
+                        $('#processSaleBtn').prop('disabled', true);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error:', error);
+                    $('#customerInfo').html('Error looking up customer');
                     $('#customerInfo').removeClass('text-success').addClass('text-danger');
                     $('#processSaleBtn').prop('disabled', true);
                 }
-            },
-            error: function() {
-                $('#customerInfo').html('Error looking up customer');
-                $('#customerInfo').removeClass('text-success').addClass('text-danger');
-                $('#processSaleBtn').prop('disabled', true);
-            }
-        });
-    }
-
-    function clearCustomerInfo() {
-        $('#customerInput').val('');
-        $('#customerId').val('');
-        $('#customerInfo').html('');
-        $('#processSaleBtn').prop('disabled', true);
-    }
-
-    function addProduct(productId, productName, price, stock) {
-        // Check if product already exists in sale
-        const existingItem = saleItems.find(item => item.product_id === productId);
-        if (existingItem) {
-            alert('This product is already in the sale. Please adjust the quantity in the table.');
-            return;
+            });
         }
 
-        // Add new item
-        saleItems.push({
-            product_id: productId,
-            name: productName,
-            price: parseFloat(price),
-            quantity: 1,
-            stock: stock
-        });
+        function clearCustomerInfo() {
+            $('#customerInput').val('');
+            $('#customerId').val('');
+            $('#customerInfo').html('');
+            $('#customerInfo').removeClass('text-success text-danger');
+            $('#processSaleBtn').prop('disabled', true);
+        }
 
-        updateSaleItemsTable();
-        updateTotal();
-    }
+        function addProduct(productId, productName, price, stock) {
+            // Check if product already exists in sale
+            const existingItem = saleItems.find(item => item.product_id === productId);
+            if (existingItem) {
+                alert('This product is already in the sale. Please adjust the quantity in the table.');
+                return;
+            }
 
-    function updateSaleItemsTable() {
-        const tbody = $('#saleItems tbody');
-        tbody.empty();
+            // Add new item with numeric price
+            saleItems.push({
+                product_id: productId,
+                name: productName,
+                price: Number(price),
+                quantity: 1,
+                stock: Number(stock)
+            });
 
-        saleItems.forEach(item => {
-            const row = `
-                <tr data-product-id="${item.product_id}">
-                    <td>${item.name}</td>
-                    <td>₱${item.price.toFixed(2)}</td>
-                    <td>
-                        <div class="input-group input-group-sm" style="width: 120px;">
-                            <button class="btn btn-outline-secondary" type="button" 
-                                onclick="updateQuantity(${item.product_id}, Math.max(1, parseInt($('#quantity_${item.product_id}').val()) - 1))">
-                                <i class="fas fa-minus"></i>
-                            </button>
-                            <input type="number" class="form-control text-center" id="quantity_${item.product_id}" 
-                                value="${item.quantity}" min="1" max="${item.stock}"
-                                onchange="updateQuantity(${item.product_id}, this.value)">
-                            <button class="btn btn-outline-secondary" type="button" 
-                                onclick="updateQuantity(${item.product_id}, Math.min(${item.stock}, parseInt($('#quantity_${item.product_id}').val()) + 1))">
-                                <i class="fas fa-plus"></i>
-                            </button>
-                        </div>
-                    </td>
-                    <td>₱${(item.price * item.quantity).toFixed(2)}</td>
-                    <td>
-                        <button type="button" class="btn btn-danger btn-sm" onclick="removeItem(${item.product_id})">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </td>
-                </tr>
-            `;
-            tbody.append(row);
-        });
-
-        // Update hidden input with sale items
-        $('#saleItemsInput').val(JSON.stringify(saleItems));
-    }
-
-    function updateQuantity(productId, quantity) {
-        const item = saleItems.find(item => item.product_id === productId);
-        if (item) {
-            quantity = parseInt(quantity);
-            if (isNaN(quantity) || quantity < 1) quantity = 1;
-            if (quantity > item.stock) quantity = item.stock;
-            
-            item.quantity = quantity;
             updateSaleItemsTable();
             updateTotal();
         }
-    }
 
-    function removeItem(productId) {
-        saleItems = saleItems.filter(item => item.product_id !== productId);
-        updateSaleItemsTable();
-        updateTotal();
-    }
+        function updateSaleItemsTable() {
+            const tbody = $('#saleItems tbody');
+            tbody.empty();
 
-    function updateTotal() {
-        const total = saleItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-        $('#totalAmount').text(`₱${total.toFixed(2)}`);
-    }
+            saleItems.forEach(item => {
+                const row = `
+                    <tr data-product-id="${item.product_id}">
+                        <td>${item.name}</td>
+                        <td>₱${Number(item.price).toFixed(2)}</td>
+                        <td>
+                            <div class="input-group input-group-sm" style="width: 120px;">
+                                <button class="btn btn-outline-secondary decrease-qty" type="button" data-product-id="${item.product_id}">
+                                    <i class="fas fa-minus"></i>
+                                </button>
+                                <input type="number" class="form-control text-center quantity-input" 
+                                    value="${item.quantity}" min="1" max="${item.stock}"
+                                    data-product-id="${item.product_id}">
+                                <button class="btn btn-outline-secondary increase-qty" type="button" data-product-id="${item.product_id}">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </td>
+                        <td>₱${(Number(item.price) * item.quantity).toFixed(2)}</td>
+                        <td>
+                            <button type="button" class="btn btn-danger btn-sm delete-item" data-product-id="${item.product_id}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                tbody.append(row);
+            });
 
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
+            // Add event listeners for quantity buttons and input
+            $('.decrease-qty').off('click').on('click', function() {
+                const productId = $(this).data('product-id');
+                const item = saleItems.find(item => item.product_id === productId);
+                if (item) {
+                    updateQuantity(productId, Math.max(1, item.quantity - 1));
                 }
+            });
+
+            $('.increase-qty').off('click').on('click', function() {
+                const productId = $(this).data('product-id');
+                const item = saleItems.find(item => item.product_id === productId);
+                if (item) {
+                    updateQuantity(productId, Math.min(item.stock, item.quantity + 1));
+                }
+            });
+
+            $('.quantity-input').off('change').on('change', function() {
+                const productId = $(this).data('product-id');
+                updateQuantity(productId, $(this).val());
+            });
+
+            $('.delete-item').off('click').on('click', function() {
+                const productId = $(this).data('product-id');
+                removeItem(productId);
+            });
+
+            // Update the hidden input with sale items
+            $('#saleItemsInput').val(JSON.stringify(saleItems));
+        }
+
+        function updateQuantity(productId, quantity) {
+            const item = saleItems.find(item => item.product_id === productId);
+            if (item) {
+                quantity = parseInt(quantity);
+                if (isNaN(quantity) || quantity < 1) quantity = 1;
+                if (quantity > item.stock) quantity = item.stock;
+                
+                item.quantity = quantity;
+                updateSaleItemsTable();
+                updateTotal();
             }
         }
-        return cookieValue;
-    }
+
+        function removeItem(productId) {
+            saleItems = saleItems.filter(item => item.product_id !== productId);
+            updateSaleItemsTable();
+            updateTotal();
+        }
+
+        function updateTotal() {
+            const total = saleItems.reduce((sum, item) => sum + (Number(item.price) * item.quantity), 0);
+            $('#totalAmount').text(`₱${total.toFixed(2)}`);
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    });
 </script>
-{% endblock %}
+{% endblock extra_js %}

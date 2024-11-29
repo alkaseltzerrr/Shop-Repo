@@ -97,10 +97,28 @@
                         <input type="tel" class="form-control" name="phone" required>
                     </div>
                     <div class="mb-3">
+                        <label class="form-label">Address</label>
+                        <textarea class="form-control" name="address" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Salary</label>
+                        <input type="number" step="0.01" class="form-control" name="salary" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Date of Birth</label>
+                        <input type="date" class="form-control" name="date_of_birth">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Emergency Contact</label>
+                        <input type="text" class="form-control" name="emergency_contact">
+                    </div>
+                    <div class="mb-3">
                         <label class="form-label">Role</label>
                         <select class="form-select" name="role" required>
-                            <option value="STAFF">Staff</option>
                             <option value="MANAGER">Manager</option>
+                            <option value="CASHIER">Cashier</option>
+                            <option value="STOCK_CLERK">Stock Clerk</option>
+                            <option value="SALES_ASSOCIATE">Sales Associate</option>
                         </select>
                     </div>
                     <div class="mb-3">
@@ -162,10 +180,28 @@
                         <input type="tel" class="form-control" name="phone" value="{{ employee.phone }}" required>
                     </div>
                     <div class="mb-3">
+                        <label class="form-label">Address</label>
+                        <textarea class="form-control" name="address" required>{{ employee.address }}</textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Salary</label>
+                        <input type="number" step="0.01" class="form-control" name="salary" value="{{ employee.salary }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Date of Birth</label>
+                        <input type="date" class="form-control" name="date_of_birth" value="{{ employee.date_of_birth|date:'Y-m-d' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Emergency Contact</label>
+                        <input type="text" class="form-control" name="emergency_contact" value="{{ employee.emergency_contact }}">
+                    </div>
+                    <div class="mb-3">
                         <label class="form-label">Role</label>
                         <select class="form-select" name="role" required>
-                            <option value="STAFF" {% if employee.role == 'STAFF' %}selected{% endif %}>Staff</option>
                             <option value="MANAGER" {% if employee.role == 'MANAGER' %}selected{% endif %}>Manager</option>
+                            <option value="CASHIER" {% if employee.role == 'CASHIER' %}selected{% endif %}>Cashier</option>
+                            <option value="STOCK_CLERK" {% if employee.role == 'STOCK_CLERK' %}selected{% endif %}>Stock Clerk</option>
+                            <option value="SALES_ASSOCIATE" {% if employee.role == 'SALES_ASSOCIATE' %}selected{% endif %}>Sales Associate</option>
                         </select>
                     </div>
                     <div class="mb-3">
