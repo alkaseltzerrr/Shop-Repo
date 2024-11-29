@@ -10,14 +10,32 @@ from .models import (
     Category, Product, Supplier, Employee,
     Customer, Purchase, Sale, SaleItem
 )
-from .forms import AdminRegistrationForm  # Add this import
+from .forms import AdminRegistrationForm
 from django.http import JsonResponse
+from functools import wraps
+
+def role_required(*allowed_roles):
+    def decorator(view_func):
+        @wraps(view_func)
+        def _wrapped_view(request, *args, **kwargs):
+            if not hasattr(request.user, 'employee'):
+                messages.error(request, 'Employee profile not found.')
+                return redirect('dashboard')
+            
+            if request.user.employee.role == 'MANAGER' or request.user.employee.role in allowed_roles:
+                return view_func(request, *args, **kwargs)
+            else:
+                messages.error(request, 'You do not have permission to access this page.')
+                return redirect('dashboard')
+        return _wrapped_view
+    return decorator
 
 # Dashboard View
 @login_required
 def dashboard(request):
     # Get today's date
     today = timezone.now().date()
+    first_day_of_month = today.replace(day=1)
     
     # Calculate statistics
     total_sales_today = Sale.objects.filter(
@@ -40,6 +58,17 @@ def dashboard(request):
     pending_orders = Purchase.objects.filter(received=False).count()
     orders_today = Purchase.objects.filter(
         purchase_date__date=today
+    ).count()
+    
+    # Calculate total sales and count for this month
+    total_sales_month = Sale.objects.filter(
+        sale_date__date__gte=first_day_of_month,
+        sale_date__date__lte=today
+    ).aggregate(total=Sum('total_amount'))['total'] or 0
+    
+    sales_count_month = Sale.objects.filter(
+        sale_date__date__gte=first_day_of_month,
+        sale_date__date__lte=today
     ).count()
     
     # Get recent sales
@@ -78,12 +107,15 @@ def dashboard(request):
         'low_stock_products': low_stock_products[:5],
         'sales_data': json.dumps(sales_data),
         'dates': json.dumps(dates),
+        'total_sales_month': total_sales_month,
+        'sales_count_month': sales_count_month,
     }
     
     return render(request, 'store_ops/dashboard.html', context)
 
 # Product Views
 @login_required
+@role_required('MANAGER', 'STOCK_CLERK', 'CASHIER', 'SALES_ASSOCIATE')
 def product_detail(request, pk):
     product = get_object_or_404(Product, pk=pk)
     context = {
@@ -93,6 +125,7 @@ def product_detail(request, pk):
     return render(request, 'store_ops/product_detail.html', context)
 
 @login_required
+@role_required('MANAGER', 'STOCK_CLERK', 'CASHIER', 'SALES_ASSOCIATE')
 def product_list(request):
     products = Product.objects.select_related('category', 'supplier').all()
     categories = Category.objects.all()
@@ -104,6 +137,7 @@ def product_list(request):
     })
 
 @login_required
+@role_required('MANAGER', 'STOCK_CLERK')
 def product_add(request):
     if request.method == 'POST':
         try:
@@ -126,6 +160,7 @@ def product_add(request):
     return redirect('product_list')
 
 @login_required
+@role_required('MANAGER', 'STOCK_CLERK')
 def product_edit(request, pk):
     product = get_object_or_404(Product, pk=pk)
     if request.method == 'POST':
@@ -147,6 +182,7 @@ def product_edit(request, pk):
     return redirect('product_list')
 
 @login_required
+@role_required('MANAGER')
 def product_delete(request, pk):
     product = get_object_or_404(Product, pk=pk)
     if request.method == 'POST':
@@ -160,6 +196,7 @@ def product_delete(request, pk):
 
 # Inventory Views
 @login_required
+@role_required('MANAGER', 'STOCK_CLERK')
 def inventory(request):
     low_stock = Product.objects.filter(
         stock_quantity__lte=F('reorder_level')
@@ -171,6 +208,7 @@ def inventory(request):
     })
 
 @login_required
+@role_required('MANAGER', 'STOCK_CLERK')
 def stock_in(request):
     if request.method == 'POST':
         try:
@@ -193,6 +231,7 @@ def stock_in(request):
     return redirect('inventory')
 
 @login_required
+@role_required('MANAGER', 'STOCK_CLERK')
 def stock_out(request):
     if request.method == 'POST':
         try:
@@ -209,6 +248,7 @@ def stock_out(request):
     return redirect('inventory')
 
 @login_required
+@role_required('MANAGER', 'STOCK_CLERK')
 def adjust_stock(request, pk):
     product = get_object_or_404(Product, pk=pk)
     if request.method == 'POST':
@@ -223,6 +263,7 @@ def adjust_stock(request, pk):
 
 # Sales Views
 @login_required
+@role_required('MANAGER', 'CASHIER', 'SALES_ASSOCIATE')
 def lookup_customer(request):
     if request.method == 'GET':
         query = request.GET.get('query', '').strip()
@@ -256,23 +297,19 @@ def lookup_customer(request):
     return JsonResponse({'results': []})
 
 @login_required
+@role_required('MANAGER')
 def delete_sale(request, pk):
     sale = get_object_or_404(Sale, pk=pk)
     if request.method == 'POST':
         try:
-            # Return products to inventory
-            for item in sale.items.all():
-                product = item.product
-                product.stock_quantity += item.quantity
-                product.save()
-            
             sale.delete()
-            return JsonResponse({'status': 'success'})
+            messages.success(request, 'Sale deleted successfully.')
         except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)})
-    return JsonResponse({'status': 'error', 'message': 'Invalid request method'})
+            messages.error(request, f'Error deleting sale: {str(e)}')
+    return redirect('sales')
 
 @login_required
+@role_required('MANAGER', 'CASHIER', 'SALES_ASSOCIATE')
 def sales(request):
     recent_sales = Sale.objects.select_related('customer').order_by('-sale_date')[:50]
     products = Product.objects.all().order_by('name')
@@ -283,6 +320,7 @@ def sales(request):
     return render(request, 'store_ops/sales.html', context)
 
 @login_required
+@role_required('MANAGER', 'CASHIER', 'SALES_ASSOCIATE')
 def process_sale(request):
     if request.method == 'POST':
         try:
@@ -348,17 +386,39 @@ def process_sale(request):
     })
 
 @login_required
+@role_required('MANAGER', 'CASHIER', 'SALES_ASSOCIATE')
 def sale_details(request, pk):
     sale = get_object_or_404(Sale, pk=pk)
-    return render(request, 'store_ops/sale_details.html', {'sale': sale})
+    items = []
+    for item in sale.items.select_related('product'):
+        items.append({
+            'product_name': item.product.name,
+            'quantity': item.quantity,
+            'unit_price': float(item.unit_price),
+            'subtotal': float(item.subtotal)
+        })
+    
+    data = {
+        'id': sale.id,
+        'date': sale.sale_date.strftime('%Y-%m-%d %H:%M:%S'),
+        'customer': sale.customer.get_full_name() if sale.customer else 'Walk-in Customer',
+        'customer_email': sale.customer.email if sale.customer else '',
+        'customer_phone': sale.customer.phone if sale.customer else '',
+        'payment_method': dict(Sale.PAYMENT_CHOICES).get(sale.payment_method),
+        'total_amount': float(sale.total_amount),
+        'items': items
+    }
+    return JsonResponse(data)
 
 # Customer Views
 @login_required
+@role_required('MANAGER', 'CASHIER', 'SALES_ASSOCIATE')
 def customer_list(request):
     customers = Customer.objects.all().order_by('first_name', 'last_name')
     return render(request, 'store_ops/customer_list.html', {'customers': customers})
 
 @login_required
+@role_required('MANAGER', 'CASHIER', 'SALES_ASSOCIATE')
 def customer_add(request):
     if request.method == 'POST':
         try:
@@ -375,6 +435,7 @@ def customer_add(request):
     return redirect('customer_list')
 
 @login_required
+@role_required('MANAGER', 'CASHIER', 'SALES_ASSOCIATE')
 def customer_edit(request, pk):
     customer = get_object_or_404(Customer, pk=pk)
     if request.method == 'POST':
@@ -392,6 +453,7 @@ def customer_edit(request, pk):
     return redirect('customer_list')
 
 @login_required
+@role_required('MANAGER', 'CASHIER', 'SALES_ASSOCIATE')
 def customer_delete(request, pk):
     customer = get_object_or_404(Customer, pk=pk)
     if request.method == 'POST':
@@ -405,11 +467,13 @@ def customer_delete(request, pk):
 
 # Supplier Views
 @login_required
+@role_required('MANAGER', 'STOCK_CLERK')
 def supplier_list(request):
     suppliers = Supplier.objects.all().order_by('name')
     return render(request, 'store_ops/supplier_list.html', {'suppliers': suppliers})
 
 @login_required
+@role_required('MANAGER')
 def supplier_add(request):
     if request.method == 'POST':
         try:
@@ -427,6 +491,7 @@ def supplier_add(request):
     return redirect('supplier_list')
 
 @login_required
+@role_required('MANAGER')
 def supplier_edit(request, pk):
     supplier = get_object_or_404(Supplier, pk=pk)
     if request.method == 'POST':
@@ -444,6 +509,7 @@ def supplier_edit(request, pk):
     return redirect('supplier_list')
 
 @login_required
+@role_required('MANAGER')
 def supplier_delete(request, pk):
     supplier = get_object_or_404(Supplier, pk=pk)
     if request.method == 'POST':
@@ -457,20 +523,14 @@ def supplier_delete(request, pk):
 
 # Employee Views
 @login_required
+@role_required('MANAGER')
 def employee_list(request):
-    if not request.user.employee.role == 'MANAGER':
-        messages.error(request, 'You do not have permission to view this page.')
-        return redirect('dashboard')
-    
     employees = Employee.objects.select_related('user').all()
     return render(request, 'store_ops/employee_list.html', {'employees': employees})
 
 @login_required
+@role_required('MANAGER')
 def employee_add(request):
-    if not request.user.employee.role == 'MANAGER':
-        messages.error(request, 'You do not have permission to add employees.')
-        return redirect('employee_list')
-        
     if request.method == 'POST':
         try:
             # Create user account
@@ -486,20 +546,23 @@ def employee_add(request):
             employee = Employee.objects.create(
                 user=user,
                 phone=request.POST.get('phone'),
+                address=request.POST.get('address'),
                 role=request.POST.get('role'),
+                salary=request.POST.get('salary'),
+                date_of_birth=request.POST.get('date_of_birth') or None,
+                emergency_contact=request.POST.get('emergency_contact'),
                 active=request.POST.get('active') == 'on'
             )
             messages.success(request, f'Employee {employee.user.get_full_name()} added successfully.')
         except Exception as e:
+            if user:  # If user was created but employee creation failed
+                user.delete()  # Clean up the user
             messages.error(request, f'Error adding employee: {str(e)}')
     return redirect('employee_list')
 
 @login_required
+@role_required('MANAGER')
 def employee_edit(request, pk):
-    if not request.user.employee.role == 'MANAGER':
-        messages.error(request, 'You do not have permission to edit employees.')
-        return redirect('employee_list')
-        
     employee = get_object_or_404(Employee, pk=pk)
     if request.method == 'POST':
         try:
@@ -518,7 +581,11 @@ def employee_edit(request, pk):
             
             # Update employee information
             employee.phone = request.POST.get('phone')
+            employee.address = request.POST.get('address')
             employee.role = request.POST.get('role')
+            employee.salary = request.POST.get('salary')
+            employee.date_of_birth = request.POST.get('date_of_birth') or None
+            employee.emergency_contact = request.POST.get('emergency_contact')
             employee.active = request.POST.get('active') == 'on'
             employee.save()
             
@@ -528,11 +595,8 @@ def employee_edit(request, pk):
     return redirect('employee_list')
 
 @login_required
+@role_required('MANAGER')
 def employee_delete(request, pk):
-    if not request.user.employee.role == 'MANAGER':
-        messages.error(request, 'You do not have permission to delete employees.')
-        return redirect('employee_list')
-        
     employee = get_object_or_404(Employee, pk=pk)
     if request.method == 'POST':
         try:
