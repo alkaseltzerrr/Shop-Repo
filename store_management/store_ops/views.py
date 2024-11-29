@@ -13,6 +13,7 @@ from .models import (
 from .forms import AdminRegistrationForm
 from django.http import JsonResponse
 from functools import wraps
+from decimal import Decimal
 
 def role_required(*allowed_roles):
     def decorator(view_func):
@@ -299,14 +300,14 @@ def lookup_customer(request):
 @login_required
 @role_required('MANAGER')
 def delete_sale(request, pk):
-    sale = get_object_or_404(Sale, pk=pk)
     if request.method == 'POST':
         try:
+            sale = get_object_or_404(Sale, pk=pk)
             sale.delete()
-            messages.success(request, 'Sale deleted successfully.')
+            return JsonResponse({'status': 'success', 'message': 'Sale deleted successfully.'})
         except Exception as e:
-            messages.error(request, f'Error deleting sale: {str(e)}')
-    return redirect('sales')
+            return JsonResponse({'status': 'error', 'message': f'Error deleting sale: {str(e)}'}, status=500)
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)
 
 @login_required
 @role_required('MANAGER', 'CASHIER', 'SALES_ASSOCIATE')
@@ -335,7 +336,7 @@ def process_sale(request):
                 total_amount=0  # Will be updated after adding items
             )
 
-            total_amount = 0
+            total_amount = Decimal('0.00')
             # Process each item
             for item in data:
                 product = Product.objects.get(id=item['product_id'])
@@ -349,24 +350,37 @@ def process_sale(request):
                         'message': f'Insufficient stock for {product.name}'
                     })
                 
+                # Calculate subtotal using Decimal
+                subtotal = product.price * Decimal(str(quantity))
+                
                 # Create sale item
                 SaleItem.objects.create(
                     sale=sale,
                     product=product,
                     quantity=quantity,
                     unit_price=product.price,
-                    subtotal=product.price * quantity
+                    subtotal=subtotal
                 )
                 
                 # Update stock
                 product.stock_quantity -= quantity
                 product.save()
                 
-                total_amount += product.price * quantity
+                total_amount += subtotal
             
             # Update sale total
             sale.total_amount = total_amount
             sale.save()
+            
+            # Add loyalty points if customer exists
+            if customer_id:
+                customer = Customer.objects.get(id=customer_id)
+                # Calculate points: 0.5 points per 100 pesos
+                points_earned = int((total_amount / Decimal('100.00')) * Decimal('0.5'))
+                if points_earned > 0:
+                    customer.loyalty_points += points_earned
+                    customer.save()
+                    messages.success(request, f'Added {points_earned} loyalty points to {customer.get_full_name()}')
             
             messages.success(request, 'Sale processed successfully')
             return JsonResponse({
