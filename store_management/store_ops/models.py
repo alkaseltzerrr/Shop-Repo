@@ -18,6 +18,7 @@ class Category(models.Model):
 
 class Supplier(models.Model):
     name = models.CharField(max_length=200)
+    description = models.TextField(blank=True, null=True, help_text="Description of who the supplier is and what they supply")
     contact_person = models.CharField(max_length=100)
     email = models.EmailField()
     phone = models.CharField(max_length=20)
