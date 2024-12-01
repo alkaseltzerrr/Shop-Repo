@@ -431,6 +431,20 @@ def sale_details(request, pk):
     }
     return JsonResponse(data)
 
+@login_required
+@role_required('MANAGER', 'CASHIER', 'SALES_ASSOCIATE')
+def get_product_details(request, product_id):
+    try:
+        product = Product.objects.get(id=product_id)
+        data = {
+            'supplier_name': product.supplier.name if product.supplier else '',
+            'supplier_id': product.supplier.id if product.supplier else '',
+            'price': str(product.price)  # Convert Decimal to string for JSON serialization
+        }
+        return JsonResponse(data)
+    except Product.DoesNotExist:
+        return JsonResponse({'error': 'Product not found'}, status=404)
+
 # Customer Views
 @login_required
 @role_required('MANAGER', 'CASHIER', 'SALES_ASSOCIATE')
