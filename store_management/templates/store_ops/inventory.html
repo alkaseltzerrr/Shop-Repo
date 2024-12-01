@@ -96,7 +96,7 @@
                     {% csrf_token %}
                     <div class="mb-3">
                         <label for="product_in" class="form-label">Product</label>
-                        <select class="form-select" id="product_in" name="product" required>
+                        <select class="form-select" id="product_in" name="product" required onchange="fetchProductDetails(this.value)">
                             <option value="">Select Product</option>
                             {% for product in products %}
                             <option value="{{ product.id }}">{{ product.name }}</option>
@@ -109,11 +109,12 @@
                     </div>
                     <div class="mb-3">
                         <label for="supplier" class="form-label">Supplier</label>
-                        <input type="text" class="form-control" id="supplier" name="supplier" required>
+                        <input type="text" class="form-control" id="supplier" name="supplier" readonly>
+                        <input type="hidden" id="supplier_id" name="supplier_id">
                     </div>
                     <div class="mb-3">
                         <label for="unit_cost" class="form-label">Unit Cost</label>
-                        <input type="number" class="form-control" id="unit_cost" name="unit_cost" min="0" step="0.01" required>
+                        <input type="number" class="form-control" id="unit_cost" name="unit_cost" min="0" step="0.01" readonly>
                     </div>
                     <div class="mb-3">
                         <label for="notes_in" class="form-label">Notes</label>
@@ -201,4 +202,42 @@
     </div>
 </div>
 {% endfor %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function fetchProductDetails(productId) {
+        if (!productId) {
+            document.getElementById('supplier').value = '';
+            document.getElementById('supplier_id').value = '';
+            document.getElementById('unit_cost').value = '';
+            return;
+        }
+
+        const url = `{% url 'get_product_details' 0 %}`.replace('0', productId);
+        console.log('Fetching from URL:', url);
+
+        fetch(url)
+            .then(response => {
+                console.log('Response status:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Received data:', data);
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                document.getElementById('supplier').value = data.supplier_name || '';
+                document.getElementById('supplier_id').value = data.supplier_id || '';
+                document.getElementById('unit_cost').value = data.price || '';
+            })
+            .catch(error => {
+                console.error('Error details:', error);
+                alert(`Error fetching product details: ${error.message}`);
+            });
+    }
+</script>
 {% endblock %}
