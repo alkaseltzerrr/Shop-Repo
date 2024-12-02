@@ -39,6 +39,12 @@ urlpatterns = [
     
     path('api/product/<int:product_id>/details/', views.get_product_details, name='get_product_details'),
     
+    # Purchase Order URLs
+    path('purchase-orders/', views.purchase_orders, name='purchase_orders'),
+    path('purchase-orders/create/', views.create_purchase, name='create_purchase'),
+    path('purchase-orders/<int:pk>/receive/', views.receive_purchase, name='receive_purchase'),
+    path('purchase-orders/<int:pk>/delete/', views.delete_purchase, name='delete_purchase'),
+    
     path('register/', views.register, name='register'),
     path('logout/', views.custom_logout, name='logout'),
 ]

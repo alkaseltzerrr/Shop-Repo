@@ -78,7 +78,7 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Description</label>
-                        <textarea class="form-control" name="description" rows="3"></textarea>
+                        <textarea class="form-control" name="description" rows="3" placeholder="Enter supplier description"></textarea>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Contact Person</label>
@@ -132,7 +132,7 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Description</label>
-                        <textarea class="form-control" name="description" rows="3">{{ supplier.description }}</textarea>
+                        <textarea class="form-control" name="description" rows="3" placeholder="Enter supplier description">{{ supplier.description|default:"" }}</textarea>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Contact Person</label>

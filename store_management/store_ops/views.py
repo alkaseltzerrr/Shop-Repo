@@ -10,7 +10,7 @@ from .models import (
     Category, Product, Supplier, Employee,
     Customer, Purchase, Sale, SaleItem
 )
-from .forms import AdminRegistrationForm
+from .forms import AdminRegistrationForm, PurchaseOrderForm
 from django.http import JsonResponse
 from functools import wraps
 from decimal import Decimal
@@ -549,6 +549,7 @@ def supplier_add(request):
         try:
             supplier = Supplier.objects.create(
                 name=request.POST.get('name'),
+                description=request.POST.get('description'),
                 contact_person=request.POST.get('contact_person'),
                 email=request.POST.get('email'),
                 phone=request.POST.get('phone'),
@@ -567,6 +568,7 @@ def supplier_edit(request, pk):
     if request.method == 'POST':
         try:
             supplier.name = request.POST.get('name')
+            supplier.description = request.POST.get('description')
             supplier.contact_person = request.POST.get('contact_person')
             supplier.email = request.POST.get('email')
             supplier.phone = request.POST.get('phone')
@@ -703,4 +705,70 @@ from django.contrib.auth import logout
 
 def custom_logout(request):
     logout(request)
-    return redirect('login')
+    return render(request, 'registration/logged_out.html')
+
+# Purchase Order Views
+@login_required
+@role_required('MANAGER', 'STOCK_CLERK')
+def purchase_orders(request):
+    purchase_orders = Purchase.objects.all().order_by('-purchase_date')
+    form = PurchaseOrderForm()
+    
+    context = {
+        'purchase_orders': purchase_orders,
+        'form': form,
+    }
+    return render(request, 'store_ops/purchase_orders.html', context)
+
+@login_required
+@role_required('MANAGER', 'STOCK_CLERK')
+def create_purchase(request):
+    if request.method == 'POST':
+        form = PurchaseOrderForm(request.POST)
+        if form.is_valid():
+            purchase_order = form.save(commit=False)
+            purchase_order.total_amount = purchase_order.quantity * purchase_order.unit_price
+            purchase_order.save()
+            messages.success(request, 'Purchase order created successfully')
+        else:
+            messages.error(request, 'Error creating purchase order')
+    return redirect('purchase_orders')
+
+@login_required
+@role_required('MANAGER', 'STOCK_CLERK')
+def receive_purchase(request, pk):
+    if request.method == 'POST':
+        try:
+            purchase = Purchase.objects.get(id=pk)
+            if not purchase.received:
+                # Update product stock
+                product = purchase.product
+                product.stock_quantity += purchase.quantity
+                product.save()
+                
+                # Mark purchase as received
+                purchase.received = True
+                purchase.received_date = timezone.now()
+                purchase.save()
+                
+                messages.success(request, f'Purchase order #{purchase.id} marked as received')
+            else:
+                messages.error(request, 'Purchase order already received')
+        except Purchase.DoesNotExist:
+            messages.error(request, 'Purchase order not found')
+    return redirect('purchase_orders')
+
+@login_required
+@role_required('MANAGER')
+def delete_purchase(request, pk):
+    if request.method == 'POST':
+        try:
+            purchase = Purchase.objects.get(id=pk)
+            if not purchase.received:
+                purchase.delete()
+                messages.success(request, 'Purchase order deleted successfully')
+            else:
+                messages.error(request, 'Cannot delete received purchase order')
+        except Purchase.DoesNotExist:
+            messages.error(request, 'Purchase order not found')
+    return redirect('purchase_orders')
