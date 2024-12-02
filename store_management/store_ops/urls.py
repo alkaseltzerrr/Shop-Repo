@@ -44,6 +44,7 @@ urlpatterns = [
     path('purchase-orders/create/', views.create_purchase, name='create_purchase'),
     path('purchase-orders/<int:pk>/receive/', views.receive_purchase, name='receive_purchase'),
     path('purchase-orders/<int:pk>/delete/', views.delete_purchase, name='delete_purchase'),
+    path('purchase-orders/<int:pk>/cancel/', views.cancel_purchase, name='cancel_purchase'),
     
     path('register/', views.register, name='register'),
     path('logout/', views.custom_logout, name='logout'),

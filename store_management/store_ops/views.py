@@ -54,18 +54,35 @@ def dashboard(request):
     
     sales_count_today = Sale.objects.filter(sale_date__date=today).count()
     
+    # Product Statistics
     total_products = Product.objects.count()
     low_stock_products = Product.objects.filter(
         stock_quantity__lte=F('reorder_level')
     )
     low_stock_count = low_stock_products.count()
     
+    # Popular and Least Popular Products
+    product_sales = SaleItem.objects.values('product__name', 'product_id').annotate(
+        total_sales=Sum('subtotal'),
+        total_quantity=Sum('quantity')
+    ).order_by('-total_sales')
+    popular_products = product_sales[:5]
+    least_popular_products = product_sales.order_by('total_sales')[:5]
+    
+    # Customer Statistics
     total_customers = Customer.objects.count()
     new_customers_today = Customer.objects.filter(
         created_at__date=today
     ).count()
     
+    # Most and Least Loyal Customers
+    loyal_customers = Customer.objects.exclude(loyalty_points=0).order_by('-loyalty_points')[:5]
+    least_loyal_customers = Customer.objects.exclude(loyalty_points=0).order_by('loyalty_points')[:5]
+    
+    # Order Statistics
     pending_orders = Purchase.objects.filter(received=False).count()
+    received_orders = Purchase.objects.filter(received=True).count()
+    cancelled_orders = Purchase.objects.filter(cancelled=True).count()
     orders_today = Purchase.objects.filter(
         purchase_date__date=today
     ).count()
@@ -145,6 +162,12 @@ def dashboard(request):
         'low_stock_products': low_stock_products[:5],
         'sales_data': json.dumps(sales_data),
         'dates': json.dumps(dates),
+        'popular_products': popular_products,
+        'least_popular_products': least_popular_products,
+        'loyal_customers': loyal_customers,
+        'least_loyal_customers': least_loyal_customers,
+        'received_orders': received_orders,
+        'cancelled_orders': cancelled_orders,
     }
     
     return render(request, 'store_ops/dashboard.html', context)
@@ -764,11 +787,25 @@ def delete_purchase(request, pk):
     if request.method == 'POST':
         try:
             purchase = Purchase.objects.get(id=pk)
-            if not purchase.received:
-                purchase.delete()
-                messages.success(request, 'Purchase order deleted successfully')
+            purchase.delete()
+            messages.success(request, 'Purchase order deleted successfully')
+        except Purchase.DoesNotExist:
+            messages.error(request, 'Purchase order not found')
+    return redirect('purchase_orders')
+
+@login_required
+@role_required('MANAGER', 'STOCK_CLERK')
+def cancel_purchase(request, pk):
+    if request.method == 'POST':
+        try:
+            purchase = Purchase.objects.get(id=pk)
+            if not purchase.received and not purchase.cancelled:
+                purchase.cancelled = True
+                purchase.cancelled_date = timezone.now()
+                purchase.save()
+                messages.success(request, f'Purchase order #{purchase.id} cancelled successfully')
             else:
-                messages.error(request, 'Cannot delete received purchase order')
+                messages.error(request, 'Cannot cancel received or already cancelled order')
         except Purchase.DoesNotExist:
             messages.error(request, 'Purchase order not found')
     return redirect('purchase_orders')

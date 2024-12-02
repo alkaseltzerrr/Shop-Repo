@@ -89,6 +89,8 @@ class Purchase(models.Model):
     purchase_date = models.DateTimeField(auto_now_add=True)
     received = models.BooleanField(default=False)
     received_date = models.DateTimeField(null=True, blank=True)
+    cancelled = models.BooleanField(default=False)
+    cancelled_date = models.DateTimeField(null=True, blank=True)
 
     def save(self, *args, **kwargs):
         self.total_amount = self.quantity * self.unit_price

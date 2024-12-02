@@ -35,7 +35,7 @@
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card bg-success text-white card-dashboard">
+        <div class="card bg-success text-white card-dashboard" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#productsModal">
             <div class="card-body">
                 <h5 class="card-title">Products in Stock</h5>
                 <h2 class="card-text">{{ total_products }}</h2>
@@ -46,7 +46,7 @@
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card bg-info text-white card-dashboard">
+        <div class="card bg-info text-white card-dashboard" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#customersModal">
             <div class="card-body">
                 <h5 class="card-title">Total Customers</h5>
                 <h2 class="card-text">{{ total_customers }}</h2>
@@ -57,12 +57,12 @@
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card bg-warning text-white card-dashboard">
+        <div class="card bg-warning text-white card-dashboard" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#ordersModal">
             <div class="card-body">
                 <h5 class="card-title">Pending Orders</h5>
                 <h2 class="card-text">{{ pending_orders }}</h2>
                 <p class="mb-0">
-                    <small>{{ orders_today }} new today</small>
+                    <small>{{ orders_today }} orders today</small>
                 </p>
             </div>
         </div>
@@ -186,6 +186,110 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Products Modal -->
+<div class="modal fade" id="productsModal" tabindex="-1" aria-labelledby="productsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="productsModalLabel">Products Overview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Most Popular Products</h6>
+                        <ul class="list-group">
+                            {% for product in popular_products %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ product.product__name }}
+                                <span class="badge bg-primary rounded-pill">${{ product.total_sales|floatformat:2 }}</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Least Popular Products</h6>
+                        <ul class="list-group">
+                            {% for product in least_popular_products %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ product.product__name }}
+                                <span class="badge bg-secondary rounded-pill">${{ product.total_sales|floatformat:2 }}</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Customers Modal -->
+<div class="modal fade" id="customersModal" tabindex="-1" aria-labelledby="customersModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="customersModalLabel">Customer Loyalty Overview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Most Loyal Customers</h6>
+                        <ul class="list-group">
+                            {% for customer in loyal_customers %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ customer.first_name }} {{ customer.last_name }}
+                                <span class="badge bg-primary rounded-pill">{{ customer.loyalty_points }} points</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Least Loyal Customers</h6>
+                        <ul class="list-group">
+                            {% for customer in least_loyal_customers %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ customer.first_name }} {{ customer.last_name }}
+                                <span class="badge bg-secondary rounded-pill">{{ customer.loyalty_points }} points</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Orders Modal -->
+<div class="modal fade" id="ordersModal" tabindex="-1" aria-labelledby="ordersModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="ordersModalLabel">Orders Overview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="list-group">
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        Pending Orders
+                        <span class="badge bg-warning rounded-pill">{{ pending_orders }}</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        Received Orders
+                        <span class="badge bg-success rounded-pill">{{ received_orders }}</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        Cancelled Orders
+                        <span class="badge bg-danger rounded-pill">{{ cancelled_orders }}</span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
