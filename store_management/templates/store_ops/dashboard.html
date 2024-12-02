@@ -138,16 +138,16 @@
 
 <!-- Sales Modal -->
 <div class="modal fade" id="salesModal" tabindex="-1" aria-labelledby="salesModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="salesModalLabel">Sales Overview</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <div class="row">
+                <div class="row g-3">
                     <div class="col-md-6">
-                        <div class="card bg-primary text-white mb-3">
+                        <div class="card bg-primary text-white h-100">
                             <div class="card-body">
                                 <h5 class="card-title">Today's Sales</h5>
                                 <h3 class="mb-0">${{ total_sales_today }}</h3>
@@ -156,11 +156,29 @@
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <div class="card bg-success text-white">
+                        <div class="card bg-success text-white h-100">
                             <div class="card-body">
                                 <h5 class="card-title">Monthly Sales</h5>
                                 <h3 class="mb-0">${{ total_sales_month }}</h3>
                                 <small>{{ sales_count_month }} transactions</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card bg-info text-white h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">Quarterly Sales</h5>
+                                <h3 class="mb-0">${{ total_sales_quarter }}</h3>
+                                <small>{{ sales_count_quarter }} transactions</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card bg-warning text-white h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">Yearly Sales</h5>
+                                <h3 class="mb-0">${{ total_sales_year }}</h3>
+                                <small>{{ sales_count_year }} transactions</small>
                             </div>
                         </div>
                     </div>

@@ -38,6 +38,15 @@ def dashboard(request):
     today = timezone.now().date()
     first_day_of_month = today.replace(day=1)
     
+    # Calculate first day of quarter
+    current_month = today.month
+    current_quarter = (current_month - 1) // 3 + 1
+    first_month_of_quarter = 3 * (current_quarter - 1) + 1
+    first_day_of_quarter = today.replace(month=first_month_of_quarter, day=1)
+    
+    # Calculate first day of year
+    first_day_of_year = today.replace(month=1, day=1)
+    
     # Calculate statistics
     total_sales_today = Sale.objects.filter(
         sale_date__date=today
@@ -69,6 +78,28 @@ def dashboard(request):
     
     sales_count_month = Sale.objects.filter(
         sale_date__date__gte=first_day_of_month,
+        sale_date__date__lte=today
+    ).count()
+    
+    # Calculate total sales and count for this quarter
+    total_sales_quarter = Sale.objects.filter(
+        sale_date__date__gte=first_day_of_quarter,
+        sale_date__date__lte=today
+    ).aggregate(total=Sum('total_amount'))['total'] or 0
+    
+    sales_count_quarter = Sale.objects.filter(
+        sale_date__date__gte=first_day_of_quarter,
+        sale_date__date__lte=today
+    ).count()
+    
+    # Calculate total sales and count for this year
+    total_sales_year = Sale.objects.filter(
+        sale_date__date__gte=first_day_of_year,
+        sale_date__date__lte=today
+    ).aggregate(total=Sum('total_amount'))['total'] or 0
+    
+    sales_count_year = Sale.objects.filter(
+        sale_date__date__gte=first_day_of_year,
         sale_date__date__lte=today
     ).count()
     
@@ -104,12 +135,16 @@ def dashboard(request):
         'new_customers_today': new_customers_today,
         'pending_orders': pending_orders,
         'orders_today': orders_today,
+        'total_sales_month': total_sales_month,
+        'sales_count_month': sales_count_month,
+        'total_sales_quarter': total_sales_quarter,
+        'sales_count_quarter': sales_count_quarter,
+        'total_sales_year': total_sales_year,
+        'sales_count_year': sales_count_year,
         'recent_sales': recent_sales,
         'low_stock_products': low_stock_products[:5],
         'sales_data': json.dumps(sales_data),
         'dates': json.dumps(dates),
-        'total_sales_month': total_sales_month,
-        'sales_count_month': sales_count_month,
     }
     
     return render(request, 'store_ops/dashboard.html', context)
