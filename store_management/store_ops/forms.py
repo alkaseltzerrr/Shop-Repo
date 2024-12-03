@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import Employee
+from .models import Employee, Purchase
 from decimal import Decimal
 
 class AdminRegistrationForm(UserCreationForm):
@@ -39,3 +39,14 @@ class AdminRegistrationForm(UserCreationForm):
                 salary=Decimal('5000.00')
             )
         return user
+
+class PurchaseOrderForm(forms.ModelForm):
+    class Meta:
+        model = Purchase
+        fields = ['supplier', 'product', 'quantity', 'unit_price']
+        widgets = {
+            'supplier': forms.Select(attrs={'class': 'form-select'}),
+            'product': forms.Select(attrs={'class': 'form-select'}),
+            'quantity': forms.NumberInput(attrs={'class': 'form-control', 'min': '1'}),
+            'unit_price': forms.NumberInput(attrs={'class': 'form-control', 'min': '0.01', 'step': '0.01'}),
+        }

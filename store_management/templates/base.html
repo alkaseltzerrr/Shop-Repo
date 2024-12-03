@@ -1,6 +1,6 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-100">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -16,11 +16,112 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .content-wrapper {
+            flex: 1 0 auto;
+        }
+        .footer {
+            flex-shrink: 0;
+            background-color: #f8f9fa;
+            padding: 1rem 0;
+            margin-top: 2rem;
+        }
+        /* Match navbar color with total sales card */
+        .navbar {
+            background-color: var(--bs-primary) !important;
+        }
+    </style>
+    <style>
+        :root {
+            --primary-color: #4e73df;
+            --secondary-color: #858796;
+            --success-color: #1cc88a;
+            --info-color: #36b9cc;
+            --warning-color: #f6c23e;
+            --danger-color: #e74a3b;
+        }
+
+        /* Light Theme (Default) */
+        body.theme-light {
+            --bg-color: #f8f9fc;
+            --card-bg: #ffffff;
+            --text-color: #5a5c69;
+            --border-color: #e3e6f0;
+            --heading-color: #4e73df;
+        }
+
+        /* Dark Theme */
+        body.theme-dark {
+            --bg-color: #1a1c23;
+            --card-bg: #2a2d35;
+            --text-color: #e0e0e0;
+            --border-color: #404040;
+            --heading-color: #6e93ff;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .card, .info-card {
+            background-color: var(--card-bg);
+            border-color: var(--border-color);
+        }
+
+        .card-header {
+            background-color: var(--card-bg);
+            border-bottom-color: var(--border-color);
+        }
+
+        .text-muted {
+            color: var(--secondary-color) !important;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            color: var(--heading-color);
+        }
+
+        .table {
+            color: var(--text-color);
+        }
+
+        .table thead th {
+            background-color: var(--card-bg);
+            border-bottom-color: var(--border-color);
+        }
+
+        .form-control, .form-select {
+            background-color: var(--bg-color);
+            border-color: var(--border-color);
+            color: var(--text-color);
+        }
+
+        .form-control:focus, .form-select:focus {
+            background-color: var(--bg-color);
+            border-color: var(--primary-color);
+            color: var(--text-color);
+        }
+
+        .nav-link {
+            color: var(--text-color);
+        }
+
+        .nav-link:hover {
+            color: var(--primary-color);
+        }
+    </style>
     {% block extra_css %}{% endblock %}
 </head>
 <body>
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
             <a class="navbar-brand" href="{% url 'dashboard' %}">
                 <img src="{% static 'images/logo.png' %}" alt="Store Management Logo" height="30" class="d-inline-block align-text-top me-2">
@@ -51,6 +152,14 @@
                            data-restricted="{% if user.employee.role not in 'MANAGER,STOCK_CLERK' %}true{% endif %}"
                            data-feature="Inventory">
                             <i class="fas fa-warehouse"></i> Inventory
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if user.employee.role not in 'MANAGER,STOCK_CLERK' %}restricted-link{% endif %}" 
+                           href="{% if user.employee.role in 'MANAGER,STOCK_CLERK' %}{% url 'purchase_orders' %}{% else %}#{% endif %}"
+                           data-restricted="{% if user.employee.role not in 'MANAGER,STOCK_CLERK' %}true{% endif %}"
+                           data-feature="Purchase Orders">
+                            <i class="fas fa-shopping-cart"></i> Purchase Orders
                         </a>
                     </li>
                     <li class="nav-item">
@@ -94,12 +203,9 @@
                             <li><a class="dropdown-item" href="{% url 'profile' %}"><i class="fas fa-id-card"></i> Profile</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li>
-                                <form method="post" action="{% url 'logout' %}" class="d-inline">
-                                    {% csrf_token %}
-                                    <button type="submit" class="dropdown-item text-danger">
-                                        <i class="fas fa-sign-out-alt"></i> Logout
-                                    </button>
-                                </form>
+                                <button type="button" class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#logoutModal">
+                                    <i class="fas fa-sign-out-alt"></i> Logout
+                                </button>
                             </li>
                         </ul>
                     </li>
@@ -110,35 +216,58 @@
     </nav>
 
     <!-- Main Content -->
-    <div class="container mt-4">
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    <div class="content-wrapper">
+        <div class="container mt-4">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            {% block content %}
+            {% endblock %}
+
+            <!-- Logout Confirmation Modal -->
+            <div class="modal fade" id="logoutModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-xl">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Confirm Logout</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body text-center">
+                            <img src="{% static 'images/sad.jpg' %}" alt="Sad Face" class="mb-3 img-fluid" style="width: 1000px;">
+                            <h4>Are you sure you want to log out?</h4>
+                            <form method="post" action="{% url 'logout' %}" class="mt-4">
+                                {% csrf_token %}
+                                <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-danger">Yes, Log Out</button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
-            {% endfor %}
-        {% endif %}
+            </div>
 
-        {% block content %}
-        {% endblock %}
-
-        <!-- Permission Warning Modal -->
-        <div class="modal fade" id="permissionModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header bg-warning">
-                        <h5 class="modal-title">
-                            <i class="fas fa-exclamation-triangle"></i> Access Restricted
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <p>Sorry, you don't have permission to access <strong id="restrictedFeature"></strong>.</p>
-                        <p>This feature is only available to specific roles. Please contact your manager if you need access.</p>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <!-- Permission Warning Modal -->
+            <div class="modal fade" id="permissionModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header bg-warning">
+                            <h5 class="modal-title">
+                                <i class="fas fa-exclamation-triangle"></i> Access Restricted
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Sorry, you don't have permission to access <strong id="restrictedFeature"></strong>.</p>
+                            <p>This feature is only available to specific roles. Please contact your manager if you need access.</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -146,7 +275,7 @@
     </div>
 
     <!-- Footer -->
-    <footer class="footer mt-auto py-3 bg-light" >
+    <footer class="footer">
         <div class="container text-center">
             <span class="text-muted"> Store Management System. All rights reserved.</span>
         </div>

@@ -8,9 +8,9 @@ from datetime import datetime, timedelta
 import json
 from .models import (
     Category, Product, Supplier, Employee,
-    Customer, Purchase, Sale, SaleItem
+    Customer, Purchase, Sale, SaleItem, UserPreferences
 )
-from .forms import AdminRegistrationForm
+from .forms import AdminRegistrationForm, PurchaseOrderForm
 from django.http import JsonResponse
 from functools import wraps
 from decimal import Decimal
@@ -54,18 +54,35 @@ def dashboard(request):
     
     sales_count_today = Sale.objects.filter(sale_date__date=today).count()
     
+    # Product Statistics
     total_products = Product.objects.count()
     low_stock_products = Product.objects.filter(
         stock_quantity__lte=F('reorder_level')
     )
     low_stock_count = low_stock_products.count()
     
+    # Popular and Least Popular Products
+    product_sales = SaleItem.objects.values('product__name', 'product_id').annotate(
+        total_sales=Sum('subtotal'),
+        total_quantity=Sum('quantity')
+    ).order_by('-total_sales')
+    popular_products = product_sales[:5]
+    least_popular_products = product_sales.order_by('total_sales')[:5]
+    
+    # Customer Statistics
     total_customers = Customer.objects.count()
     new_customers_today = Customer.objects.filter(
         created_at__date=today
     ).count()
     
-    pending_orders = Purchase.objects.filter(received=False).count()
+    # Most and Least Loyal Customers
+    loyal_customers = Customer.objects.exclude(loyalty_points=0).order_by('-loyalty_points')[:5]
+    least_loyal_customers = Customer.objects.exclude(loyalty_points=0).order_by('loyalty_points')[:5]
+    
+    # Order Statistics
+    pending_orders = Purchase.objects.filter(received=False, cancelled=False).count()
+    received_orders = Purchase.objects.filter(received=True).count()
+    cancelled_orders = Purchase.objects.filter(cancelled=True).count()
     orders_today = Purchase.objects.filter(
         purchase_date__date=today
     ).count()
@@ -145,6 +162,12 @@ def dashboard(request):
         'low_stock_products': low_stock_products[:5],
         'sales_data': json.dumps(sales_data),
         'dates': json.dumps(dates),
+        'popular_products': popular_products,
+        'least_popular_products': least_popular_products,
+        'loyal_customers': loyal_customers,
+        'least_loyal_customers': least_loyal_customers,
+        'received_orders': received_orders,
+        'cancelled_orders': cancelled_orders,
     }
     
     return render(request, 'store_ops/dashboard.html', context)
@@ -374,6 +397,7 @@ def process_sale(request):
             # Create sale
             sale = Sale.objects.create(
                 customer_id=customer_id if customer_id else None,
+                employee=request.user.employee,  # Set the logged-in employee
                 payment_method=payment_method,
                 total_amount=0  # Will be updated after adding items
             )
@@ -460,6 +484,9 @@ def sale_details(request, pk):
         'customer': sale.customer.get_full_name() if sale.customer else 'Walk-in Customer',
         'customer_email': sale.customer.email if sale.customer else '',
         'customer_phone': sale.customer.phone if sale.customer else '',
+        'employee': f"{sale.employee.user.first_name} {sale.employee.user.last_name}" if sale.employee else 'Unknown Employee',
+        'employee_email': sale.employee.user.email if sale.employee else '',
+        'employee_phone': sale.employee.phone if sale.employee else '',
         'payment_method': dict(Sale.PAYMENT_CHOICES).get(sale.payment_method),
         'total_amount': float(sale.total_amount),
         'items': items
@@ -549,6 +576,7 @@ def supplier_add(request):
         try:
             supplier = Supplier.objects.create(
                 name=request.POST.get('name'),
+                description=request.POST.get('description'),
                 contact_person=request.POST.get('contact_person'),
                 email=request.POST.get('email'),
                 phone=request.POST.get('phone'),
@@ -567,6 +595,7 @@ def supplier_edit(request, pk):
     if request.method == 'POST':
         try:
             supplier.name = request.POST.get('name')
+            supplier.description = request.POST.get('description')
             supplier.contact_person = request.POST.get('contact_person')
             supplier.email = request.POST.get('email')
             supplier.phone = request.POST.get('phone')
@@ -679,15 +708,61 @@ def employee_delete(request, pk):
 
 @login_required
 def profile(request):
-    try:
-        employee = Employee.objects.get(user=request.user)
-    except Employee.DoesNotExist:
-        employee = None
+    context = {}
     
-    context = {
-        'employee': employee
-    }
+    if hasattr(request.user, 'employee'):
+        employee = request.user.employee
+        context['employee'] = employee
+        
+        # Calculate days employed
+        days_employed = (timezone.now().date() - employee.hire_date).days
+        context['days_employed'] = days_employed
+        
+        # Get sales statistics
+        sales = Sale.objects.filter(employee=employee)
+        context['total_sales'] = sales.count()
+        context['total_revenue'] = sales.aggregate(total=Sum('total_amount'))['total'] or 0
+        
+        # Get recent activities
+        recent_activities = []
+        
+        # Add recent sales
+        recent_sales = sales.order_by('-sale_date')[:5]
+        for sale in recent_sales:
+            recent_activities.append({
+                'date': sale.sale_date,
+                'description': f'Processed sale #{sale.id} for ${sale.total_amount}'
+            })
+        
+        # Add recent logins
+        if request.user.last_login:
+            recent_activities.append({
+                'date': request.user.last_login,
+                'description': 'Logged into the system'
+            })
+        
+        # Sort activities by date
+        recent_activities.sort(key=lambda x: x['date'], reverse=True)
+        context['recent_activities'] = recent_activities
+        
+    # Get user preferences
+    preferences, created = UserPreferences.objects.get_or_create(user=request.user)
+    context['preferences'] = preferences
+    
     return render(request, 'store_ops/profile.html', context)
+
+@login_required
+def save_preferences(request):
+    if request.method == 'POST':
+        preferences, created = UserPreferences.objects.get_or_create(user=request.user)
+        preferences.theme = request.POST.get('theme', 'light')
+        preferences.time_format = request.POST.get('time_format', '24')
+        preferences.date_format = request.POST.get('date_format', 'mdy')
+        preferences.email_notifications = request.POST.get('email_notifications') == 'on'
+        preferences.save()
+        
+        return JsonResponse({'status': 'success'})
+    return JsonResponse({'status': 'error'}, status=400)
 
 def register(request):
     if request.method == 'POST':
@@ -703,4 +778,84 @@ from django.contrib.auth import logout
 
 def custom_logout(request):
     logout(request)
-    return redirect('login')
+    return render(request, 'registration/logged_out.html')
+
+# Purchase Order Views
+@login_required
+@role_required('MANAGER', 'STOCK_CLERK')
+def purchase_orders(request):
+    purchase_orders = Purchase.objects.all().order_by('-purchase_date')
+    form = PurchaseOrderForm()
+    
+    context = {
+        'purchase_orders': purchase_orders,
+        'form': form,
+    }
+    return render(request, 'store_ops/purchase_orders.html', context)
+
+@login_required
+@role_required('MANAGER', 'STOCK_CLERK')
+def create_purchase(request):
+    if request.method == 'POST':
+        form = PurchaseOrderForm(request.POST)
+        if form.is_valid():
+            purchase_order = form.save(commit=False)
+            purchase_order.total_amount = purchase_order.quantity * purchase_order.unit_price
+            purchase_order.save()
+            messages.success(request, 'Purchase order created successfully')
+        else:
+            messages.error(request, 'Error creating purchase order')
+    return redirect('purchase_orders')
+
+@login_required
+@role_required('MANAGER', 'STOCK_CLERK')
+def receive_purchase(request, pk):
+    if request.method == 'POST':
+        try:
+            purchase = Purchase.objects.get(id=pk)
+            if not purchase.received:
+                # Update product stock
+                product = purchase.product
+                product.stock_quantity += purchase.quantity
+                product.save()
+                
+                # Mark purchase as received
+                purchase.received = True
+                purchase.received_date = timezone.now()
+                purchase.save()
+                
+                messages.success(request, f'Purchase order #{purchase.id} marked as received')
+            else:
+                messages.error(request, 'Purchase order already received')
+        except Purchase.DoesNotExist:
+            messages.error(request, 'Purchase order not found')
+    return redirect('purchase_orders')
+
+@login_required
+@role_required('MANAGER')
+def delete_purchase(request, pk):
+    if request.method == 'POST':
+        try:
+            purchase = Purchase.objects.get(id=pk)
+            purchase.delete()
+            messages.success(request, 'Purchase order deleted successfully')
+        except Purchase.DoesNotExist:
+            messages.error(request, 'Purchase order not found')
+    return redirect('purchase_orders')
+
+@login_required
+@role_required('MANAGER', 'STOCK_CLERK')
+def cancel_purchase(request, pk):
+    if request.method == 'POST':
+        try:
+            purchase = Purchase.objects.get(id=pk)
+            if not purchase.received and not purchase.cancelled:
+                purchase.cancelled = True
+                purchase.cancelled_date = timezone.now()
+                purchase.save()
+                messages.success(request, f'Purchase order #{purchase.id} cancelled successfully')
+            else:
+                messages.error(request, 'Cannot cancel received or already cancelled order')
+        except Purchase.DoesNotExist:
+            messages.error(request, 'Purchase order not found')
+    return redirect('purchase_orders')

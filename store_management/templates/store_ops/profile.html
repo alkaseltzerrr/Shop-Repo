@@ -1,46 +1,548 @@
 {% extends 'base.html' %}
 
+{% block extra_css %}
+<style>
+    .profile-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .profile-header {
+        background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+        color: white;
+        padding: 3rem 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .profile-avatar {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        background-color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1rem;
+        border: 5px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .profile-avatar i {
+        font-size: 4rem;
+        color: #4e73df;
+    }
+
+    /* User Information Styles */
+    .user-info {
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+    }
+
+    .info-item {
+        display: flex;
+        align-items: flex-start;
+        padding: 0.75rem;
+        background: var(--bg-color);
+        border-radius: 10px;
+        transition: all 0.3s ease;
+    }
+
+    .info-item:hover {
+        transform: translateX(5px);
+        background: rgba(78, 115, 223, 0.1);
+    }
+
+    .info-item i {
+        font-size: 1.25rem;
+        color: #4e73df;
+        margin-top: 3px;
+    }
+
+    .info-item div {
+        margin-left: 1rem;
+        flex: 1;
+    }
+
+    .info-item strong {
+        display: block;
+        font-size: 0.875rem;
+        color: var(--secondary-color);
+        margin-bottom: 0.25rem;
+    }
+
+    .info-item p {
+        color: var(--text-color);
+        font-size: 1rem;
+    }
+
+    .badge {
+        padding: 0.5em 1em;
+        font-weight: 500;
+    }
+
+    .stats-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: var(--card-bg);
+        border-radius: 15px;
+        padding: 1.5rem;
+        text-align: center;
+        transition: transform 0.3s, box-shadow 0.3s;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .stat-icon {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        color: #4e73df;
+    }
+
+    .preference-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.75rem 1.5rem;
+        border-radius: 10px;
+        border: 2px solid var(--border-color);
+        background: var(--card-bg);
+        color: var(--text-color);
+        transition: all 0.3s;
+        margin: 0.5rem;
+        cursor: pointer;
+        font-weight: 500;
+        min-width: 120px;
+    }
+
+    .preference-button i {
+        margin-right: 0.5rem;
+        font-size: 1.2rem;
+    }
+
+    .preference-button.active {
+        background: #4e73df;
+        color: white;
+        border-color: #4e73df;
+    }
+
+    .preference-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .preference-group {
+        margin-bottom: 2rem;
+        padding: 1.5rem;
+        background: var(--card-bg);
+        border-radius: 15px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .preference-group h5 {
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid var(--border-color);
+    }
+
+    .notification-switch {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 34px;
+    }
+
+    .notification-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .switch-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: .4s;
+        border-radius: 34px;
+    }
+
+    .switch-slider:before {
+        position: absolute;
+        content: "";
+        height: 26px;
+        width: 26px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+    }
+
+    input:checked + .switch-slider {
+        background-color: #4e73df;
+    }
+
+    input:checked + .switch-slider:before {
+        transform: translateX(26px);
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-    <div class="row">
-        <div class="col-md-8 offset-md-2">
-            <div class="card">
-                <div class="card-header">
-                    <h4>User Profile</h4>
+<div class="profile-container">
+    <!-- Profile Header -->
+    <div class="profile-header">
+        <div class="row align-items-center">
+            <div class="col-auto">
+                <div class="profile-avatar">
+                    <i class="fas fa-user"></i>
                 </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-12">
-                            <h5>Account Information</h5>
-                            <hr>
-                            <p><strong>Username:</strong> {{ user.username }}</p>
-                            <p><strong>Email:</strong> {{ user.email }}</p>
-                            <p><strong>Last Login:</strong> {{ user.last_login|date:"F d, Y H:i" }}</p>
+            </div>
+            <div class="col">
+                <h2 class="mb-1">{{ employee.user.get_full_name }}</h2>
+                <p class="mb-1"><i class="fas fa-id-badge me-2"></i>{{ employee.get_role_display }}</p>
+                <p class="mb-0"><i class="fas fa-envelope me-2"></i>{{ user.email }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Information Section -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="preference-group">
+                <h5><i class="fas fa-user-circle me-2"></i>Account Information</h5>
+                <div class="user-info">
+                    <div class="info-item">
+                        <i class="fas fa-user me-2"></i>
+                        <div>
+                            <strong>Username</strong>
+                            <p class="mb-0">{{ user.username }}</p>
                         </div>
                     </div>
+                    <div class="info-item">
+                        <i class="fas fa-envelope me-2"></i>
+                        <div>
+                            <strong>Email</strong>
+                            <p class="mb-0">{{ user.email }}</p>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-clock me-2"></i>
+                        <div>
+                            <strong>Last Login</strong>
+                            <p class="mb-0">{{ user.last_login|date:"F d, Y H:i" }}</p>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-calendar-check me-2"></i>
+                        <div>
+                            <strong>Account Created</strong>
+                            <p class="mb-0">{{ user.date_joined|date:"F d, Y" }}</p>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-shield-alt me-2"></i>
+                        <div>
+                            <strong>Account Status</strong>
+                            <p class="mb-0">
+                                {% if user.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Inactive</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-                    {% if employee %}
-                    <div class="row mt-4">
-                        <div class="col-md-12">
-                            <h5>Employee Information</h5>
-                            <hr>
-                            <p><strong>Full Name:</strong> {{ employee.user.get_full_name }}</p>
-                            <p><strong>Role:</strong> {{ employee.get_role_display }}</p>
-                            <p><strong>Phone:</strong> {{ employee.phone }}</p>
-                            <p><strong>Address:</strong> {{ employee.address }}</p>
-                            <p><strong>Hire Date:</strong> {{ employee.hire_date|date:"F d, Y" }}</p>
-                            {% if employee.date_of_birth %}
-                            <p><strong>Date of Birth:</strong> {{ employee.date_of_birth|date:"F d, Y" }}</p>
-                            {% endif %}
-                            {% if employee.emergency_contact %}
-                            <p><strong>Emergency Contact:</strong> {{ employee.emergency_contact }}</p>
-                            {% endif %}
+        {% if employee %}
+        <div class="col-md-6">
+            <div class="preference-group">
+                <h5><i class="fas fa-id-card me-2"></i>Employee Information</h5>
+                <div class="user-info">
+                    <div class="info-item">
+                        <i class="fas fa-user-tie me-2"></i>
+                        <div>
+                            <strong>Full Name</strong>
+                            <p class="mb-0">{{ employee.user.get_full_name }}</p>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-briefcase me-2"></i>
+                        <div>
+                            <strong>Role</strong>
+                            <p class="mb-0">{{ employee.get_role_display }}</p>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-phone me-2"></i>
+                        <div>
+                            <strong>Phone</strong>
+                            <p class="mb-0">{{ employee.phone }}</p>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-dollar-sign me-2"></i>
+                        <div>
+                            <strong>Salary</strong>
+                            <p class="mb-0">${{ employee.salary|floatformat:2 }}</p>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-toggle-on me-2"></i>
+                        <div>
+                            <strong>Employee Status</strong>
+                            <p class="mb-0">
+                                {% if employee.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Inactive</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-calendar-alt me-2"></i>
+                        <div>
+                            <strong>Hire Date</strong>
+                            <p class="mb-0">{{ employee.hire_date|date:"F d, Y" }}</p>
+                        </div>
+                    </div>
+                    {% if employee.date_of_birth %}
+                    <div class="info-item">
+                        <i class="fas fa-birthday-cake me-2"></i>
+                        <div>
+                            <strong>Date of Birth</strong>
+                            <p class="mb-0">{{ employee.date_of_birth|date:"F d, Y" }}</p>
                         </div>
                     </div>
                     {% endif %}
+                    {% if employee.emergency_contact %}
+                    <div class="info-item">
+                        <i class="fas fa-ambulance me-2"></i>
+                        <div>
+                            <strong>Emergency Contact</strong>
+                            <p class="mb-0">{{ employee.emergency_contact }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                    <div class="info-item">
+                        <i class="fas fa-map-marker-alt me-2"></i>
+                        <div>
+                            <strong>Address</strong>
+                            <p class="mb-0">{{ employee.address }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Stats Section -->
+    <div class="stats-container">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-shopping-cart"></i>
+            </div>
+            <h3 class="mb-2">{{ total_sales|default:0 }}</h3>
+            <p class="text-muted mb-0">Total Sales</p>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-dollar-sign"></i>
+            </div>
+            <h3 class="mb-2">${{ total_revenue|default:'0.00' }}</h3>
+            <p class="text-muted mb-0">Revenue Generated</p>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-clock"></i>
+            </div>
+            <h3 class="mb-2">{{ days_employed }}</h3>
+            <p class="text-muted mb-0">Days with Company</p>
+        </div>
+    </div>
+
+    <!-- Preferences Section -->
+    <div class="row">
+        <div class="col-md-6">
+            <!-- Theme Preferences -->
+            <div class="preference-group">
+                <h5><i class="fas fa-palette me-2"></i>Theme Preferences</h5>
+                <div class="d-flex flex-wrap">
+                    <button class="preference-button theme-btn {% if preferences.theme == 'light' %}active{% endif %}" data-theme="light">
+                        <i class="fas fa-sun"></i>Light
+                    </button>
+                    <button class="preference-button theme-btn {% if preferences.theme == 'dark' %}active{% endif %}" data-theme="dark">
+                        <i class="fas fa-moon"></i>Dark
+                    </button>
+                    <button class="preference-button theme-btn {% if preferences.theme == 'auto' %}active{% endif %}" data-theme="auto">
+                        <i class="fas fa-magic"></i>Auto
+                    </button>
+                </div>
+            </div>
+
+            <!-- Time Format -->
+            <div class="preference-group">
+                <h5><i class="fas fa-clock me-2"></i>Time Format</h5>
+                <div class="d-flex flex-wrap">
+                    <button class="preference-button time-btn {% if preferences.time_format == '24' %}active{% endif %}" data-time="24">
+                        <i class="fas fa-clock"></i>24-Hour
+                    </button>
+                    <button class="preference-button time-btn {% if preferences.time_format == '12' %}active{% endif %}" data-time="12">
+                        <i class="far fa-clock"></i>12-Hour
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <!-- Date Format -->
+            <div class="preference-group">
+                <h5><i class="fas fa-calendar me-2"></i>Date Format</h5>
+                <div class="d-flex flex-wrap">
+                    <button class="preference-button date-btn {% if preferences.date_format == 'mdy' %}active{% endif %}" data-date="mdy">
+                        <i class="fas fa-calendar-alt"></i>MM/DD/YYYY
+                    </button>
+                    <button class="preference-button date-btn {% if preferences.date_format == 'dmy' %}active{% endif %}" data-date="dmy">
+                        <i class="fas fa-calendar-alt"></i>DD/MM/YYYY
+                    </button>
+                    <button class="preference-button date-btn {% if preferences.date_format == 'ymd' %}active{% endif %}" data-date="ymd">
+                        <i class="fas fa-calendar-alt"></i>YYYY/MM/DD
+                    </button>
+                </div>
+            </div>
+
+            <!-- Notifications -->
+            <div class="preference-group">
+                <h5><i class="fas fa-bell me-2"></i>Notifications</h5>
+                <div class="d-flex align-items-center">
+                    <label class="notification-switch me-3">
+                        <input type="checkbox" id="emailNotifications" {% if preferences.email_notifications %}checked{% endif %}>
+                        <span class="switch-slider"></span>
+                    </label>
+                    <span>Email Notifications</span>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Recent Activity -->
+    <div class="preference-group mt-4">
+        <h5><i class="fas fa-history me-2"></i>Recent Activity</h5>
+        <div class="activity-timeline">
+            {% for activity in recent_activities|slice:":5" %}
+            <div class="timeline-item">
+                <p class="mb-0"><strong>{{ activity.date|date:"F d, Y H:i" }}</strong></p>
+                <p class="text-muted mb-0">{{ activity.description }}</p>
+            </div>
+            {% empty %}
+            <p class="text-muted">No recent activity to display.</p>
+            {% endfor %}
+        </div>
+    </div>
 </div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Theme buttons
+    document.querySelectorAll('.theme-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            savePreference('theme', this.dataset.theme);
+            applyTheme(this.dataset.theme);
+        });
+    });
+
+    // Time format buttons
+    document.querySelectorAll('.time-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            savePreference('time_format', this.dataset.time);
+        });
+    });
+
+    // Date format buttons
+    document.querySelectorAll('.date-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.date-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            savePreference('date_format', this.dataset.date);
+        });
+    });
+
+    // Notification toggle
+    document.getElementById('emailNotifications').addEventListener('change', function() {
+        savePreference('email_notifications', this.checked ? 'on' : 'off');
+    });
+
+    function savePreference(key, value) {
+        const formData = new FormData();
+        formData.append(key, value);
+        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+        fetch('{% url "save_preferences" %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                // Show a subtle success message
+                const toast = document.createElement('div');
+                toast.className = 'alert alert-success position-fixed bottom-0 end-0 m-3';
+                toast.style.zIndex = '1050';
+                toast.innerHTML = 'Preferences saved successfully!';
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 3000);
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    function applyTheme(theme) {
+        const body = document.body;
+        body.classList.remove('theme-light', 'theme-dark');
+        
+        if (theme === 'auto') {
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                body.classList.add('theme-dark');
+            } else {
+                body.classList.add('theme-light');
+            }
+        } else {
+            body.classList.add(`theme-${theme}`);
+        }
+    }
+
+    // Apply initial theme
+    applyTheme('{{ preferences.theme }}');
+});
+</script>
+{% endblock %}
 {% endblock %}

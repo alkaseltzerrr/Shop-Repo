@@ -5,6 +5,7 @@ urlpatterns = [
     path('', views.dashboard, name='dashboard'),
     path('dashboard/', views.dashboard, name='dashboard'),
     path('profile/', views.profile, name='profile'),
+    path('save-preferences/', views.save_preferences, name='save_preferences'),
     path('products/', views.product_list, name='product_list'),
     path('products/add/', views.product_add, name='product_add'),
     path('products/<int:pk>/', views.product_detail, name='product_detail'),
@@ -38,6 +39,13 @@ urlpatterns = [
     path('employees/<int:pk>/delete/', views.employee_delete, name='employee_delete'),
     
     path('api/product/<int:product_id>/details/', views.get_product_details, name='get_product_details'),
+    
+    # Purchase Order URLs
+    path('purchase-orders/', views.purchase_orders, name='purchase_orders'),
+    path('purchase-orders/create/', views.create_purchase, name='create_purchase'),
+    path('purchase-orders/<int:pk>/receive/', views.receive_purchase, name='receive_purchase'),
+    path('purchase-orders/<int:pk>/delete/', views.delete_purchase, name='delete_purchase'),
+    path('purchase-orders/<int:pk>/cancel/', views.cancel_purchase, name='cancel_purchase'),
     
     path('register/', views.register, name='register'),
     path('logout/', views.custom_logout, name='logout'),
