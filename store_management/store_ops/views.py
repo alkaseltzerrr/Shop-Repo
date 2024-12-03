@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 import json
 from .models import (
     Category, Product, Supplier, Employee,
-    Customer, Purchase, Sale, SaleItem
+    Customer, Purchase, Sale, SaleItem, UserPreferences
 )
 from .forms import AdminRegistrationForm, PurchaseOrderForm
 from django.http import JsonResponse
@@ -80,7 +80,7 @@ def dashboard(request):
     least_loyal_customers = Customer.objects.exclude(loyalty_points=0).order_by('loyalty_points')[:5]
     
     # Order Statistics
-    pending_orders = Purchase.objects.filter(received=False).count()
+    pending_orders = Purchase.objects.filter(received=False, cancelled=False).count()
     received_orders = Purchase.objects.filter(received=True).count()
     cancelled_orders = Purchase.objects.filter(cancelled=True).count()
     orders_today = Purchase.objects.filter(
@@ -397,6 +397,7 @@ def process_sale(request):
             # Create sale
             sale = Sale.objects.create(
                 customer_id=customer_id if customer_id else None,
+                employee=request.user.employee,  # Set the logged-in employee
                 payment_method=payment_method,
                 total_amount=0  # Will be updated after adding items
             )
@@ -483,6 +484,9 @@ def sale_details(request, pk):
         'customer': sale.customer.get_full_name() if sale.customer else 'Walk-in Customer',
         'customer_email': sale.customer.email if sale.customer else '',
         'customer_phone': sale.customer.phone if sale.customer else '',
+        'employee': f"{sale.employee.user.first_name} {sale.employee.user.last_name}" if sale.employee else 'Unknown Employee',
+        'employee_email': sale.employee.user.email if sale.employee else '',
+        'employee_phone': sale.employee.phone if sale.employee else '',
         'payment_method': dict(Sale.PAYMENT_CHOICES).get(sale.payment_method),
         'total_amount': float(sale.total_amount),
         'items': items
@@ -704,15 +708,61 @@ def employee_delete(request, pk):
 
 @login_required
 def profile(request):
-    try:
-        employee = Employee.objects.get(user=request.user)
-    except Employee.DoesNotExist:
-        employee = None
+    context = {}
     
-    context = {
-        'employee': employee
-    }
+    if hasattr(request.user, 'employee'):
+        employee = request.user.employee
+        context['employee'] = employee
+        
+        # Calculate days employed
+        days_employed = (timezone.now().date() - employee.hire_date).days
+        context['days_employed'] = days_employed
+        
+        # Get sales statistics
+        sales = Sale.objects.filter(employee=employee)
+        context['total_sales'] = sales.count()
+        context['total_revenue'] = sales.aggregate(total=Sum('total_amount'))['total'] or 0
+        
+        # Get recent activities
+        recent_activities = []
+        
+        # Add recent sales
+        recent_sales = sales.order_by('-sale_date')[:5]
+        for sale in recent_sales:
+            recent_activities.append({
+                'date': sale.sale_date,
+                'description': f'Processed sale #{sale.id} for ${sale.total_amount}'
+            })
+        
+        # Add recent logins
+        if request.user.last_login:
+            recent_activities.append({
+                'date': request.user.last_login,
+                'description': 'Logged into the system'
+            })
+        
+        # Sort activities by date
+        recent_activities.sort(key=lambda x: x['date'], reverse=True)
+        context['recent_activities'] = recent_activities
+        
+    # Get user preferences
+    preferences, created = UserPreferences.objects.get_or_create(user=request.user)
+    context['preferences'] = preferences
+    
     return render(request, 'store_ops/profile.html', context)
+
+@login_required
+def save_preferences(request):
+    if request.method == 'POST':
+        preferences, created = UserPreferences.objects.get_or_create(user=request.user)
+        preferences.theme = request.POST.get('theme', 'light')
+        preferences.time_format = request.POST.get('time_format', '24')
+        preferences.date_format = request.POST.get('date_format', 'mdy')
+        preferences.email_notifications = request.POST.get('email_notifications') == 'on'
+        preferences.save()
+        
+        return JsonResponse({'status': 'success'})
+    return JsonResponse({'status': 'error'}, status=400)
 
 def register(request):
     if request.method == 'POST':

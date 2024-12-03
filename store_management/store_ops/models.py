@@ -107,6 +107,7 @@ class Sale(models.Model):
     ]
     
     customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True, blank=True)
+    employee = models.ForeignKey(Employee, on_delete=models.PROTECT, related_name='sales', null=True, blank=True)
     sale_date = models.DateTimeField(auto_now_add=True)
     total_amount = models.DecimalField(max_digits=12, decimal_places=2)
     payment_method = models.CharField(max_length=10, choices=PAYMENT_CHOICES, default='CASH')
@@ -127,3 +128,24 @@ class SaleItem(models.Model):
     
     def __str__(self):
         return f"{self.product.name} x {self.quantity}"
+
+class UserPreferences(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='preferences')
+    theme = models.CharField(max_length=10, choices=[
+        ('light', 'Light Mode'),
+        ('dark', 'Dark Mode'),
+        ('auto', 'System Default')
+    ], default='light')
+    time_format = models.CharField(max_length=2, choices=[
+        ('24', '24-hour'),
+        ('12', '12-hour')
+    ], default='24')
+    date_format = models.CharField(max_length=3, choices=[
+        ('mdy', 'MM/DD/YYYY'),
+        ('dmy', 'DD/MM/YYYY'),
+        ('ymd', 'YYYY/MM/DD')
+    ], default='mdy')
+    email_notifications = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.user.username}'s preferences"

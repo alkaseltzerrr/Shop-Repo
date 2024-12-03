@@ -103,6 +103,7 @@
                             <tr>
                                 <th>Date</th>
                                 <th>Customer</th>
+                                <th>Employee</th>
                                 <th>Total Amount</th>
                                 <th>Payment Method</th>
                                 <th>Actions</th>
@@ -117,6 +118,13 @@
                                         {{ sale.customer.first_name }} {{ sale.customer.last_name }}
                                     {% else %}
                                         Walk-in Customer
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if sale.employee %}
+                                        {{ sale.employee.user.first_name }} {{ sale.employee.user.last_name }}
+                                    {% else %}
+                                        Unknown Employee
                                     {% endif %}
                                 </td>
                                 <td>${{ sale.total_amount|floatformat:2 }}</td>
@@ -217,6 +225,14 @@
                         <p class="mb-1"><strong>Name:</strong> <span id="customerName"></span></p>
                         <p class="mb-1"><strong>Email:</strong> <span id="customerEmail"></span></p>
                         <p class="mb-1"><strong>Phone:</strong> <span id="customerPhone"></span></p>
+                    </div>
+                </div>
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Employee Information</h6>
+                        <p class="mb-1"><strong>Name:</strong> <span id="employeeName"></span></p>
+                        <p class="mb-1"><strong>Email:</strong> <span id="employeeEmail"></span></p>
+                        <p class="mb-1"><strong>Phone:</strong> <span id="employeePhone"></span></p>
                     </div>
                 </div>
                 <div class="table-responsive">
@@ -395,6 +411,11 @@
                     $('#customerName').text(data.customer || 'Walk-in Customer');
                     $('#customerEmail').text(data.customer_email || 'N/A');
                     $('#customerPhone').text(data.customer_phone || 'N/A');
+                    
+                    // Handle employee information
+                    $('#employeeName').text(data.employee || 'Unknown Employee');
+                    $('#employeeEmail').text(data.employee_email || 'N/A');
+                    $('#employeePhone').text(data.employee_phone || 'N/A');
                     
                     // Update items table
                     var tbody = $('#saleItemsTable tbody');

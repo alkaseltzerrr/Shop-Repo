@@ -36,6 +36,87 @@
             background-color: var(--bs-primary) !important;
         }
     </style>
+    <style>
+        :root {
+            --primary-color: #4e73df;
+            --secondary-color: #858796;
+            --success-color: #1cc88a;
+            --info-color: #36b9cc;
+            --warning-color: #f6c23e;
+            --danger-color: #e74a3b;
+        }
+
+        /* Light Theme (Default) */
+        body.theme-light {
+            --bg-color: #f8f9fc;
+            --card-bg: #ffffff;
+            --text-color: #5a5c69;
+            --border-color: #e3e6f0;
+            --heading-color: #4e73df;
+        }
+
+        /* Dark Theme */
+        body.theme-dark {
+            --bg-color: #1a1c23;
+            --card-bg: #2a2d35;
+            --text-color: #e0e0e0;
+            --border-color: #404040;
+            --heading-color: #6e93ff;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .card, .info-card {
+            background-color: var(--card-bg);
+            border-color: var(--border-color);
+        }
+
+        .card-header {
+            background-color: var(--card-bg);
+            border-bottom-color: var(--border-color);
+        }
+
+        .text-muted {
+            color: var(--secondary-color) !important;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            color: var(--heading-color);
+        }
+
+        .table {
+            color: var(--text-color);
+        }
+
+        .table thead th {
+            background-color: var(--card-bg);
+            border-bottom-color: var(--border-color);
+        }
+
+        .form-control, .form-select {
+            background-color: var(--bg-color);
+            border-color: var(--border-color);
+            color: var(--text-color);
+        }
+
+        .form-control:focus, .form-select:focus {
+            background-color: var(--bg-color);
+            border-color: var(--primary-color);
+            color: var(--text-color);
+        }
+
+        .nav-link {
+            color: var(--text-color);
+        }
+
+        .nav-link:hover {
+            color: var(--primary-color);
+        }
+    </style>
     {% block extra_css %}{% endblock %}
 </head>
 <body>

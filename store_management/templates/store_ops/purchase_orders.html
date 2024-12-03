@@ -54,14 +54,14 @@
                             </td>
                             <td>
                                 {% if not order.received and not order.cancelled %}
-                                <button class="btn btn-success btn-sm" onclick="receivePurchase({{ order.id }})">
+                                <button class="btn btn-success btn-sm" onclick="receivePurchase('{{ order.id }}')">
                                     <i class="fas fa-check"></i> Receive
                                 </button>
-                                <button class="btn btn-warning btn-sm" onclick="cancelPurchase({{ order.id }})">
+                                <button class="btn btn-warning btn-sm" onclick="cancelPurchase('{{ order.id }}')">
                                     <i class="fas fa-ban"></i> Cancel
                                 </button>
                                 {% endif %}
-                                <button class="btn btn-danger btn-sm" onclick="deletePurchase({{ order.id }})">
+                                <button class="btn btn-danger btn-sm" onclick="deletePurchase('{{ order.id }}')">
                                     <i class="fas fa-trash"></i> Delete
                                 </button>
                             </td>
