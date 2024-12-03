@@ -11,6 +11,57 @@
     .card-dashboard:hover {
         transform: translateY(-5px);
     }
+
+    .sales-card {
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-bottom: 0;
+    }
+
+    .sales-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .sales-chart-wrapper {
+        position: relative;
+        margin-top: 1rem;
+    }
+
+    .sales-chart-container {
+        display: none;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        height: 300px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .sales-chart-container.show {
+        display: block;
+        opacity: 1;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @keyframes fadeOut {
+        from { opacity: 1; }
+        to { opacity: 0; }
+    }
+
+    .fade-in {
+        animation: fadeIn 0.3s ease forwards;
+    }
+
+    .fade-out {
+        animation: fadeOut 0.3s ease forwards;
+    }
 </style>
 {% endblock %}
 
@@ -147,38 +198,58 @@
             <div class="modal-body">
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <div class="card bg-primary text-white h-100">
-                            <div class="card-body">
-                                <h5 class="card-title">Today's Sales</h5>
-                                <h3 class="mb-0">${{ total_sales_today }}</h3>
-                                <small>{{ sales_count_today }} transactions</small>
+                        <div class="sales-chart-wrapper">
+                            <div class="card bg-primary text-white sales-card" data-sales-type="today">
+                                <div class="card-body">
+                                    <h5 class="card-title">Today's Sales</h5>
+                                    <h3 class="mb-0">${{ total_sales_today }}</h3>
+                                    <small>{{ sales_count_today }} transactions</small>
+                                </div>
+                            </div>
+                            <div id="todayChartContainer" class="sales-chart-container">
+                                <canvas id="todayChart"></canvas>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <div class="card bg-success text-white h-100">
-                            <div class="card-body">
-                                <h5 class="card-title">Monthly Sales</h5>
-                                <h3 class="mb-0">${{ total_sales_month }}</h3>
-                                <small>{{ sales_count_month }} transactions</small>
+                        <div class="sales-chart-wrapper">
+                            <div class="card bg-success text-white sales-card" data-sales-type="monthly">
+                                <div class="card-body">
+                                    <h5 class="card-title">Monthly Sales</h5>
+                                    <h3 class="mb-0">${{ total_sales_month }}</h3>
+                                    <small>{{ sales_count_month }} transactions</small>
+                                </div>
+                            </div>
+                            <div id="monthlyChartContainer" class="sales-chart-container">
+                                <canvas id="monthlyChart"></canvas>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <div class="card bg-info text-white h-100">
-                            <div class="card-body">
-                                <h5 class="card-title">Quarterly Sales</h5>
-                                <h3 class="mb-0">${{ total_sales_quarter }}</h3>
-                                <small>{{ sales_count_quarter }} transactions</small>
+                        <div class="sales-chart-wrapper">
+                            <div class="card bg-info text-white sales-card" data-sales-type="quarterly">
+                                <div class="card-body">
+                                    <h5 class="card-title">Quarterly Sales</h5>
+                                    <h3 class="mb-0">${{ total_sales_quarter }}</h3>
+                                    <small>{{ sales_count_quarter }} transactions</small>
+                                </div>
+                            </div>
+                            <div id="quarterlyChartContainer" class="sales-chart-container">
+                                <canvas id="quarterlyChart"></canvas>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <div class="card bg-warning text-white h-100">
-                            <div class="card-body">
-                                <h5 class="card-title">Yearly Sales</h5>
-                                <h3 class="mb-0">${{ total_sales_year }}</h3>
-                                <small>{{ sales_count_year }} transactions</small>
+                        <div class="sales-chart-wrapper">
+                            <div class="card bg-warning text-white sales-card" data-sales-type="yearly">
+                                <div class="card-body">
+                                    <h5 class="card-title">Yearly Sales</h5>
+                                    <h3 class="mb-0">${{ total_sales_year }}</h3>
+                                    <small>{{ sales_count_year }} transactions</small>
+                                </div>
+                            </div>
+                            <div id="yearlyChartContainer" class="sales-chart-container">
+                                <canvas id="yearlyChart"></canvas>
                             </div>
                         </div>
                     </div>
@@ -313,29 +384,209 @@
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    var ctx = document.getElementById('salesChart').getContext('2d');
-    var salesDates = JSON.parse('{{ dates|safe }}');
-    var salesValues = JSON.parse('{{ sales_data|safe }}');
+    document.addEventListener('DOMContentLoaded', function() {
+        const charts = {};
+        let activeChart = null;
+        let hoverTimeout = null;
 
-    var salesChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: salesDates,
-            datasets: [{
-                label: 'Sales',
-                data: salesValues,
-                borderColor: 'rgb(75, 192, 192)',
-                tension: 0.1
-            }]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                y: {
-                    beginAtZero: true
+        // Initialize event listeners for sales cards
+        document.querySelectorAll('.sales-card').forEach(card => {
+            const type = card.dataset.salesType;
+            const chartContainer = document.getElementById(`${type}ChartContainer`);
+            
+            // Hover functionality with 0.25-second delay
+            card.addEventListener('mouseenter', () => {
+                if (!activeChart) {
+                    // Clear any existing timeout
+                    if (hoverTimeout) {
+                        clearTimeout(hoverTimeout);
+                    }
+                    // Set new timeout for 0.25 seconds
+                    hoverTimeout = setTimeout(() => {
+                        showChart(type);
+                    }, 250); // 250 milliseconds = 0.25 seconds
                 }
+            });
+
+            card.addEventListener('mouseleave', (e) => {
+                // Clear the timeout if mouse leaves before 0.25 seconds
+                if (hoverTimeout) {
+                    clearTimeout(hoverTimeout);
+                    hoverTimeout = null;
+                }
+                if (!activeChart) {
+                    hideChart(type);
+                }
+            });
+
+            // Click functionality
+            card.addEventListener('click', (e) => {
+                e.preventDefault();
+                // Clear any pending hover timeout
+                if (hoverTimeout) {
+                    clearTimeout(hoverTimeout);
+                    hoverTimeout = null;
+                }
+                if (activeChart === type) {
+                    hideChart(type);
+                    activeChart = null;
+                } else {
+                    if (activeChart) {
+                        hideChart(activeChart);
+                    }
+                    showChart(type);
+                    activeChart = type;
+                }
+            });
+        });
+
+        function showChart(type) {
+            const container = document.getElementById(`${type}ChartContainer`);
+            container.classList.add('show');
+            createChart(type);
+        }
+
+        function hideChart(type) {
+            const container = document.getElementById(`${type}ChartContainer`);
+            container.classList.remove('show');
+            if (charts[type]) {
+                charts[type].destroy();
+                charts[type] = null;
             }
         }
+
+        function createChart(type) {
+            if (charts[type]) {
+                charts[type].destroy();
+            }
+
+            const ctx = document.getElementById(`${type}Chart`).getContext('2d');
+            let data;
+            const now = new Date();
+            const today = now.toISOString().split('T')[0];
+
+            switch(type) {
+                case 'today':
+                    // Use actual hourly sales data from the database
+                    data = {
+                        labels: JSON.parse('{{ hourly_labels|safe }}'),
+                        values: JSON.parse('{{ hourly_sales|safe }}')
+                    };
+                    break;
+                
+                case 'monthly':
+                    // Get current month's data
+                    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+                    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+                    data = {
+                        labels: Array.from({length: daysInMonth}, (_, i) => `Day ${i + 1}`),
+                        values: Array.from({length: daysInMonth}, () => 0)
+                    };
+                    // Fill in month's total sales at the current day
+                    data.values[now.getDate() - 1] = {{ total_sales_month }};
+                    break;
+                
+                case 'quarterly':
+                    // Use actual quarterly sales data from the database
+                    data = {
+                        labels: JSON.parse('{{ quarterly_labels|safe }}'),
+                        values: JSON.parse('{{ quarterly_sales|safe }}')
+                    };
+                    break;
+                
+                case 'yearly':
+                    // Use actual yearly sales data from the database
+                    data = {
+                        labels: JSON.parse('{{ yearly_labels|safe }}'),
+                        values: JSON.parse('{{ yearly_sales|safe }}')
+                    };
+                    break;
+            }
+
+            charts[type] = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: `${type.charAt(0).toUpperCase() + type.slice(1)} Sales`,
+                        data: data.values,
+                        borderColor: getChartColor(type),
+                        tension: 0.1,
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Sales Amount ($)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: getXAxisLabel(type)
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        function getXAxisLabel(type) {
+            const labels = {
+                today: 'Hours',
+                monthly: 'Days',
+                quarterly: 'Months in Quarter',
+                yearly: 'Months'
+            };
+            return labels[type];
+        }
+
+        function getChartColor(type) {
+            const colors = {
+                today: 'rgb(13, 110, 253)',     // Bootstrap primary
+                monthly: 'rgb(25, 135, 84)',    // Bootstrap success
+                quarterly: 'rgb(13, 202, 240)', // Bootstrap info
+                yearly: 'rgb(255, 193, 7)'      // Bootstrap warning
+            };
+            return colors[type];
+        }
+
+        // Initialize main sales chart
+        var ctx = document.getElementById('salesChart').getContext('2d');
+        var salesDates = JSON.parse('{{ dates|safe }}');
+        var salesValues = JSON.parse('{{ sales_data|safe }}');
+
+        var salesChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: salesDates,
+                datasets: [{
+                    label: 'Sales',
+                    data: salesValues,
+                    borderColor: 'rgb(75, 192, 192)',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
     });
 </script>
 {% endblock %}
