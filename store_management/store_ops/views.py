@@ -47,6 +47,61 @@ def dashboard(request):
     # Calculate first day of year
     first_day_of_year = today.replace(month=1, day=1)
     
+    # Calculate today's hourly sales
+    hourly_sales = []
+    hourly_labels = []
+    
+    for hour in range(24):
+        start_time = timezone.make_aware(datetime.combine(today, datetime.min.time()) + timedelta(hours=hour))
+        end_time = start_time + timedelta(hours=1)
+        
+        hour_sales = Sale.objects.filter(
+            sale_date__gte=start_time,
+            sale_date__lt=end_time
+        ).aggregate(total=Sum('total_amount'))['total'] or 0
+        
+        hourly_sales.append(float(hour_sales))
+        hourly_labels.append(f"{hour:02d}:00")
+    
+    # Calculate quarterly sales (by month within the quarter)
+    quarterly_sales = []
+    quarterly_labels = []
+    
+    for month_offset in range(3):
+        month = first_month_of_quarter + month_offset
+        month_start = today.replace(month=month, day=1)
+        if month < 12:
+            month_end = today.replace(month=month + 1, day=1)
+        else:
+            month_end = today.replace(year=today.year + 1, month=1, day=1)
+            
+        month_sales = Sale.objects.filter(
+            sale_date__date__gte=month_start,
+            sale_date__date__lt=month_end
+        ).aggregate(total=Sum('total_amount'))['total'] or 0
+        
+        quarterly_sales.append(float(month_sales))
+        quarterly_labels.append(month_start.strftime('%B'))  # Full month name
+    
+    # Calculate yearly sales (by month)
+    yearly_sales = []
+    yearly_labels = []
+    
+    for month in range(1, 13):
+        month_start = today.replace(month=month, day=1)
+        if month < 12:
+            month_end = today.replace(month=month + 1, day=1)
+        else:
+            month_end = today.replace(year=today.year + 1, month=1, day=1)
+            
+        month_sales = Sale.objects.filter(
+            sale_date__date__gte=month_start,
+            sale_date__date__lt=month_end
+        ).aggregate(total=Sum('total_amount'))['total'] or 0
+        
+        yearly_sales.append(float(month_sales))
+        yearly_labels.append(month_start.strftime('%B'))  # Full month name
+    
     # Calculate statistics
     total_sales_today = Sale.objects.filter(
         sale_date__date=today
@@ -168,6 +223,12 @@ def dashboard(request):
         'least_loyal_customers': least_loyal_customers,
         'received_orders': received_orders,
         'cancelled_orders': cancelled_orders,
+        'hourly_sales': json.dumps(hourly_sales),
+        'hourly_labels': json.dumps(hourly_labels),
+        'quarterly_sales': json.dumps(quarterly_sales),
+        'quarterly_labels': json.dumps(quarterly_labels),
+        'yearly_sales': json.dumps(yearly_sales),
+        'yearly_labels': json.dumps(yearly_labels),
     }
     
     return render(request, 'store_ops/dashboard.html', context)
