@@ -17,104 +17,405 @@
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        body {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-        .content-wrapper {
-            flex: 1 0 auto;
-        }
-        .footer {
-            flex-shrink: 0;
-            background-color: #f8f9fa;
-            padding: 1rem 0;
-            margin-top: 2rem;
-        }
-        /* Match navbar color with total sales card */
-        .navbar {
-            background-color: var(--bs-primary) !important;
-        }
-    </style>
-    <style>
         :root {
+            /* Base colors */
             --primary-color: #4e73df;
             --secondary-color: #858796;
             --success-color: #1cc88a;
             --info-color: #36b9cc;
             --warning-color: #f6c23e;
             --danger-color: #e74a3b;
-        }
-
-        /* Light Theme (Default) */
-        body.theme-light {
-            --bg-color: #f8f9fc;
-            --card-bg: #ffffff;
-            --text-color: #5a5c69;
+            
+            /* Theme specific variables */
+            --bg-primary: #f8f9fc;
+            --bg-secondary: #ffffff;
+            --text-primary: #5a5c69;
+            --text-secondary: #858796;
             --border-color: #e3e6f0;
-            --heading-color: #4e73df;
+            --input-bg: #ffffff;
+            --card-bg: #ffffff;
+            --navbar-bg: var(--primary-color);
+            --navbar-text: #ffffff;
         }
 
         /* Dark Theme */
         body.theme-dark {
-            --bg-color: #1a1c23;
-            --card-bg: #2a2d35;
-            --text-color: #e0e0e0;
-            --border-color: #404040;
-            --heading-color: #6e93ff;
+            --bg-primary: #1a1c24;
+            --bg-secondary: #242631;
+            --text-primary: #ffffff;
+            --text-secondary: #b7b9cc;
+            --border-color: #373b47;
+            --input-bg: #2e3139;
+            --card-bg: #242631;
+            --navbar-bg: #242631;
+            --navbar-text: #ffffff;
         }
 
+        /* Global Styles */
         body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
             transition: background-color 0.3s, color 0.3s;
         }
 
-        .card, .info-card {
+        /* Card Styles */
+        .card {
             background-color: var(--card-bg);
             border-color: var(--border-color);
         }
 
-        .card-header {
-            background-color: var(--card-bg);
-            border-bottom-color: var(--border-color);
+        /* Form Controls */
+        .form-control {
+            background-color: var(--input-bg);
+            border-color: var(--border-color);
+            color: var(--text-primary);
         }
 
-        .text-muted {
-            color: var(--secondary-color) !important;
+        .form-control:focus {
+            background-color: var(--input-bg);
+            color: var(--text-primary);
         }
 
-        h1, h2, h3, h4, h5, h6 {
-            color: var(--heading-color);
-        }
-
+        /* Tables */
         .table {
-            color: var(--text-color);
+            color: var(--text-primary);
         }
 
-        .table thead th {
+        .table td, .table th {
+            border-color: var(--border-color);
+        }
+
+        /* Navbar */
+        .navbar {
+            background-color: var(--navbar-bg) !important;
+        }
+
+        .navbar-dark .navbar-nav .nav-link {
+            color: var(--navbar-text);
+        }
+
+        /* Dropdowns */
+        .dropdown-menu {
             background-color: var(--card-bg);
+            border-color: var(--border-color);
+        }
+
+        .dropdown-item {
+            color: var(--text-primary);
+        }
+
+        .dropdown-item:hover {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+        }
+
+        /* Modal */
+        .modal-content {
+            background-color: var(--card-bg);
+            color: var(--text-primary);
+        }
+
+        .modal-header, .modal-footer {
+            border-color: var(--border-color);
+        }
+
+        /* Footer */
+        .footer {
+            background-color: var(--card-bg);
+            color: var(--text-primary);
+            border-top: 1px solid var(--border-color);
+            padding: 1rem 0;
+            margin-top: 2rem;
+        }
+
+        .content-wrapper {
+            flex: 1 0 auto;
+        }
+
+        /* Product Cards in Sales Page */
+        .product-card {
+            background-color: #242631 !important;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .product-card:hover {
+            background-color: #2f3241 !important;
+            transform: translateY(-2px);
+        }
+
+        .product-card h5,
+        .product-card .price {
+            color: #ffffff !important;
+        }
+
+        .product-card .text-muted {
+            color: #b7b9cc !important;
+        }
+
+        /* Product search input in sales page */
+        #productsSearch {
+            background-color: #1a1c24;
+            color: #ffffff;
+            border-color: var(--border-color);
+        }
+
+        #productsSearch:focus {
+            background-color: #1a1c24;
+            border-color: var(--primary-color);
+        }
+
+        #productsSearch::placeholder {
+            color: #b7b9cc;
+        }
+
+        /* Stock text color */
+        .products-list .text-muted {
+            color: #b7b9cc !important;
+        }
+
+        /* Product price */
+        .products-list .card .h5 {
+            color: var(--text-primary);
+        }
+
+        /* Products section title */
+        .products-list .h4 {
+            color: var(--text-primary);
+        }
+
+        /* Dark Theme Styles */
+        body.theme-dark {
+            --bg-primary: #1a1c24;
+            --bg-secondary: #242631;
+            --text-primary: #ffffff;
+            --text-secondary: #b7b9cc;
+            --border-color: #373b47;
+            --input-bg: #2e3139;
+            --card-bg: #242631;
+            --navbar-bg: #242631;
+            --navbar-text: #ffffff;
+        }
+
+        body.theme-dark .list-group-item {
+            background-color: #242631;
+            border-color: var(--border-color);
+            color: #ffffff;
+        }
+
+        body.theme-dark .list-group-item:hover {
+            background-color: #2f3241;
+        }
+
+        body.theme-dark .list-group-item h6,
+        body.theme-dark .list-group-item .fw-bold {
+            color: #ffffff;
+        }
+
+        body.theme-dark .text-muted,
+        body.theme-dark small.text-muted {
+            color: #b7b9cc !important;
+        }
+
+        body.theme-dark .form-control {
+            background-color: #1a1c24;
+            border-color: var(--border-color);
+            color: #ffffff;
+        }
+
+        body.theme-dark .form-control:focus {
+            background-color: #1a1c24;
+            border-color: var(--primary-color);
+            color: #ffffff;
+        }
+
+        body.theme-dark .form-control::placeholder {
+            color: #b7b9cc;
+        }
+
+        body.theme-dark .form-select {
+            background-color: #1a1c24;
+            border-color: var(--border-color);
+            color: #ffffff;
+        }
+
+        body.theme-dark .table {
+            color: #ffffff;
+        }
+
+        body.theme-dark .table td,
+        body.theme-dark .table th {
+            border-color: var(--border-color);
+        }
+
+        body.theme-dark .modal-content {
+            background-color: var(--bg-secondary);
+            color: #ffffff;
+        }
+
+        body.theme-dark .modal-header,
+        body.theme-dark .modal-footer {
+            border-color: var(--border-color);
+        }
+
+        body.theme-dark .btn-close {
+            filter: invert(1) grayscale(100%) brightness(200%);
+        }
+
+        body.theme-dark .sales-card {
+            background-color: var(--bg-secondary);
+            border-color: var(--border-color);
+        }
+
+        body.theme-dark .card-header:not(.bg-primary) {
+            background-color: var(--bg-secondary);
+            border-color: var(--border-color);
+            color: #ffffff;
+        }
+
+        body.theme-dark .form-label {
+            color: #ffffff;
+        }
+
+        body.theme-dark h1, 
+        body.theme-dark h2, 
+        body.theme-dark h3, 
+        body.theme-dark h4, 
+        body.theme-dark h5, 
+        body.theme-dark h6,
+        body.theme-dark .h1, 
+        body.theme-dark .h2, 
+        body.theme-dark .h3, 
+        body.theme-dark .h4, 
+        body.theme-dark .h5, 
+        body.theme-dark .h6 {
+            color: #ffffff;
+        }
+
+        /* Dark Theme Sales Table */
+        body.theme-dark .table {
+            color: #ffffff !important;
+        }
+
+        body.theme-dark .table th,
+        body.theme-dark .table td {
+            color: #ffffff !important;
+            border-color: var(--border-color);
+        }
+
+        body.theme-dark .table thead th {
+            background-color: var(--bg-secondary);
+            color: #ffffff !important;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        body.theme-dark .table tbody tr {
+            background-color: var(--bg-secondary);
+        }
+
+        body.theme-dark .table tbody tr:hover {
+            background-color: #2f3241;
+        }
+
+        /* Sales Card Specific */
+        body.theme-dark .sales-card {
+            background-color: var(--bg-secondary);
+        }
+
+        body.theme-dark .sales-card .card-header {
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        body.theme-dark .sales-card .card-body {
+            background-color: var(--bg-secondary);
+        }
+
+        /* Recent Sales Section */
+        body.theme-dark .recent-sales h5,
+        body.theme-dark .recent-sales .h5,
+        body.theme-dark .recent-sales span,
+        body.theme-dark .recent-sales div {
+            color: #ffffff !important;
+        }
+
+        /* All text elements in dark mode */
+        body.theme-dark * {
+            color: #ffffff;
+        }
+
+        body.theme-dark .text-muted,
+        body.theme-dark .text-secondary {
+            color: #b7b9cc !important;
+        }
+
+        /* Ensure form elements are properly colored */
+        body.theme-dark input,
+        body.theme-dark select,
+        body.theme-dark textarea {
+            color: #ffffff !important;
+            background-color: #1a1c24 !important;
+        }
+
+        /* Table header and content */
+        body.theme-dark th,
+        body.theme-dark td {
+            color: #ffffff !important;
+        }
+
+        /* Customer and Employee names */
+        body.theme-dark .table td a,
+        body.theme-dark .table td span {
+            color: #ffffff !important;
+        }
+
+        /* Amount values */
+        body.theme-dark .table td[data-amount],
+        body.theme-dark .table td strong {
+            color: #ffffff !important;
+        }
+
+        /* Dashboard Tabs in Dark Mode */
+        body.theme-dark .nav-tabs {
             border-bottom-color: var(--border-color);
         }
 
-        .form-control, .form-select {
-            background-color: var(--bg-color);
+        body.theme-dark .nav-tabs .nav-link {
+            color: #b7b9cc;
+            background-color: #1a1c24;
             border-color: var(--border-color);
-            color: var(--text-color);
         }
 
-        .form-control:focus, .form-select:focus {
-            background-color: var(--bg-color);
-            border-color: var(--primary-color);
-            color: var(--text-color);
+        body.theme-dark .nav-tabs .nav-link:hover {
+            background-color: #2f3241;
+            border-color: var(--border-color);
+            color: #ffffff;
         }
 
-        .nav-link {
-            color: var(--text-color);
+        body.theme-dark .nav-tabs .nav-link.active {
+            color: #ffffff;
+            background-color: #242631;
+            border-color: var(--border-color);
+            border-bottom-color: #242631;
         }
 
-        .nav-link:hover {
-            color: var(--primary-color);
+        /* Chart container in dark mode */
+        body.theme-dark .chart-container {
+            background-color: var(--bg-secondary);
+        }
+
+        /* Sales Overview Modal in Dark Mode */
+        body.theme-dark .modal-header .btn-close {
+            background-color: transparent;
+            filter: invert(1) grayscale(100%) brightness(200%);
+        }
+
+        body.theme-dark .nav-tabs-container {
+            background-color: var(--bg-secondary);
+            padding: 1rem;
+            border-radius: 0.5rem;
         }
     </style>
     {% block extra_css %}{% endblock %}
@@ -286,7 +587,8 @@
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <!-- Custom JavaScript -->
-        <script>
+    <script src="{% static 'js/theme.js' %}"></script>
+    <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Get all restricted links
             const restrictedLinks = document.querySelectorAll('.restricted-link');
