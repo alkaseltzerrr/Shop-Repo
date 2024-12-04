@@ -8,207 +8,342 @@
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet" />
 <style>
+    .sales-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .sales-card {
+        background: var(--card-bg);
+        border-radius: 15px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+        overflow: hidden;
+    }
+
+    .card-header {
+        background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+        color: white;
+        padding: 1.5rem;
+        border-bottom: none;
+    }
+
+    .card-header h5 {
+        color: white;
+        margin: 0;
+        font-weight: 600;
+    }
+
+    .card-body {
+        padding: 1.5rem;
+    }
+
+    .form-label {
+        font-weight: 500;
+        color: var(--text-color);
+    }
+
+    .form-control, .form-select {
+        border-radius: 8px;
+        padding: 0.75rem;
+        border: 1px solid var(--border-color);
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: #4e73df;
+        box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+    }
+
+    .input-group .btn {
+        padding: 0.75rem 1rem;
+        border-radius: 0 8px 8px 0;
+    }
+
+    .table {
+        margin-bottom: 0;
+    }
+
+    .table thead th {
+        background-color: rgba(78, 115, 223, 0.1);
+        border-bottom: none;
+        color: var(--text-color);
+        font-weight: 600;
+        padding: 1rem;
+    }
+
+    .table tbody td {
+        padding: 1rem;
+        vertical-align: middle;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .table tbody tr:hover {
+        background-color: rgba(78, 115, 223, 0.05);
+    }
+
     .product-item {
         cursor: pointer;
-        transition: background-color 0.2s;
+        transition: all 0.3s ease;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 0.5rem;
     }
+
     .product-item:hover {
-        background-color: #f8f9fa;
+        background-color: rgba(78, 115, 223, 0.1);
+        transform: translateX(5px);
+    }
+
+    .alert-info {
+        background-color: rgba(23, 162, 184, 0.1);
+        border: 1px solid rgba(23, 162, 184, 0.2);
+        color: #17a2b8;
+        border-radius: 8px;
+    }
+
+    .form-switch .form-check-input {
+        width: 3em;
+        height: 1.5em;
+        margin-top: 0.25em;
+    }
+
+    .form-switch .form-check-input:checked {
+        background-color: #4e73df;
+        border-color: #4e73df;
+    }
+
+    .price-text {
+        font-family: monospace;
+        font-weight: 600;
+        color: #4e73df;
+    }
+
+    .action-btn {
+        padding: 0.375rem 0.75rem;
+        border-radius: 6px;
+        transition: all 0.3s ease;
+        margin-right: 0.25rem;
+    }
+
+    .action-btn:hover {
+        transform: translateY(-2px);
+    }
+
+    #productSearch {
+        border-radius: 8px;
+        padding: 0.75rem;
+        margin-bottom: 1rem;
+        border: 1px solid var(--border-color);
+        transition: all 0.3s ease;
+    }
+
+    #productSearch:focus {
+        border-color: #4e73df;
+        box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+    }
+
+    .badge {
+        padding: 0.5em 1em;
+        font-weight: 500;
+        border-radius: 6px;
     }
 </style>
 {% endblock extra_css %}
 
 {% block content %}
-<div class="row">
-    <!-- Sales Form -->
-    <div class="col-md-8">
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="card-title mb-0">New Sale</h5>
-            </div>
-            <div class="card-body">
-                <form method="post" action="{% url 'process_sale' %}" id="saleForm">
-                    {% csrf_token %}
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Customer (Full Name Required)</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control" id="customerInput" 
-                                       placeholder="Enter full name (e.g. John Smith)">
-                                <input type="hidden" name="customer" id="customerId">
-                                <button class="btn btn-primary" type="button" id="checkCustomer">
-                                    <i class="fas fa-check"></i> Check
-                                </button>
-                                <button class="btn btn-outline-secondary" type="button" id="clearCustomer">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
-                            <small id="customerInfo" class="text-muted"></small>
-                            <div id="loyaltyPointsSection" class="mt-2" style="display: none;">
-                                <div class="alert alert-info">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <strong>Available Points:</strong> <span id="availablePoints">0</span>
-                                            <br>
-                                            <small class="text-muted">1 point = $1 discount</small>
+<div class="sales-container">
+    <div class="row">
+        <!-- Sales Form -->
+        <div class="col-md-8">
+            <div class="sales-card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">New Sale</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{% url 'process_sale' %}" id="saleForm">
+                        {% csrf_token %}
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Customer (Full Name Required)</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="customerInput" 
+                                           placeholder="Enter full name (e.g. John Smith)">
+                                    <input type="hidden" name="customer" id="customerId">
+                                    <button class="btn btn-primary" type="button" id="checkCustomer">
+                                        <i class="fas fa-check"></i> Check
+                                    </button>
+                                    <button class="btn btn-outline-secondary" type="button" id="clearCustomer">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                                <small id="customerInfo" class="text-muted"></small>
+                                <div id="loyaltyPointsSection" class="mt-2" style="display: none;">
+                                    <div class="alert alert-info">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <strong>Available Points:</strong> <span id="availablePoints">0</span>
+                                                <br>
+                                                <small class="text-muted">1 point = $1 discount</small>
+                                            </div>
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="usePoints">
+                                                <label class="form-check-label" for="usePoints">Use Points</label>
+                                            </div>
                                         </div>
-                                        <div class="form-check form-switch">
-                                            <input class="form-check-input" type="checkbox" id="usePoints">
-                                            <label class="form-check-label" for="usePoints">Use Points</label>
+                                        <div id="pointsToUseDiv" class="mt-2" style="display: none;">
+                                            <label class="form-label">Points to Use:</label>
+                                            <input type="number" class="form-control" id="pointsToUse" name="points_to_use" min="0" value="0">
+                                            <small class="text-muted">Maximum points you can use: <span id="maxPointsAllowed">0</span></small>
                                         </div>
-                                    </div>
-                                    <div id="pointsToUseDiv" class="mt-2" style="display: none;">
-                                        <label class="form-label">Points to Use:</label>
-                                        <input type="number" class="form-control" id="pointsToUse" name="points_to_use" min="0" value="0">
-                                        <small class="text-muted">Maximum points you can use: <span id="maxPointsAllowed">0</span></small>
                                     </div>
                                 </div>
+                                <div class="form-text text-muted">Please enter both first and last name for accurate lookup</div>
                             </div>
-                            <div class="form-text text-muted">Please enter both first and last name for accurate lookup</div>
+                            <div class="col-md-6">
+                                <label class="form-label">Payment Method</label>
+                                <select class="form-select" name="payment_method" required>
+                                    <option value="CASH">Cash</option>
+                                    <option value="CARD">Card</option>
+                                    <option value="MOBILE">GCash Payment</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Payment Method</label>
-                            <select class="form-select" name="payment_method" required>
-                                <option value="CASH">Cash</option>
-                                <option value="CARD">Card</option>
-                                <option value="MOBILE">GCash Payment</option>
-                            </select>
-                        </div>
-                    </div>
 
-                    <div class="table-responsive mb-3">
-                        <table class="table" id="saleItems">
+                        <div class="table-responsive mb-3">
+                            <table class="table" id="saleItems">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>Price</th>
+                                        <th>Quantity</th>
+                                        <th>Subtotal</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Sale items will be added here dynamically -->
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="3" class="text-end"><strong>Subtotal:</strong></td>
+                                        <td><span id="subtotalAmount">$0.00</span></td>
+                                        <td></td>
+                                    </tr>
+                                    <tr id="loyaltyDiscountRow" style="display: none;">
+                                        <td colspan="3" class="text-end text-success"><strong>Loyalty Discount:</strong></td>
+                                        <td><span id="loyaltyDiscount">-$0.00</span></td>
+                                        <td></td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="3" class="text-end"><strong>Final Total:</strong></td>
+                                        <td><span id="totalAmount">$0.00</span></td>
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+
+                        <!-- Hidden input for sale items -->
+                        <input type="hidden" name="items" id="saleItemsInput">
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary" id="processSaleBtn" disabled>Process Sale</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Recent Sales -->
+            <div class="sales-card">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Sales</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive mt-4">
+                        <h4>Recent Sales</h4>
+                        <table class="table table-striped">
                             <thead>
                                 <tr>
-                                    <th>Product</th>
-                                    <th>Price</th>
-                                    <th>Quantity</th>
-                                    <th>Subtotal</th>
-                                    <th>Action</th>
+                                    <th>Date</th>
+                                    <th>Customer</th>
+                                    <th>Employee</th>
+                                    <th>Total Amount</th>
+                                    <th>Payment Method</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <!-- Sale items will be added here dynamically -->
+                                {% for sale in recent_sales %}
+                                <tr>
+                                    <td>{{ sale.sale_date|date:"Y-m-d H:i" }}</td>
+                                    <td>
+                                        {% if sale.customer %}
+                                            {{ sale.customer.first_name }} {{ sale.customer.last_name }}
+                                        {% else %}
+                                            Walk-in Customer
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if sale.employee %}
+                                            {{ sale.employee.user.first_name }} {{ sale.employee.user.last_name }}
+                                        {% else %}
+                                            Unknown Employee
+                                        {% endif %}
+                                    </td>
+                                    <td>${{ sale.total_amount|floatformat:2 }}</td>
+                                    <td>{{ sale.payment_method|get_payment_method_display }}</td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-info view-sale" 
+                                                data-bs-toggle="modal" data-bs-target="#saleDetailsModal" 
+                                                data-sale-id="{{ sale.id }}">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        {% if user.employee.role == 'MANAGER' %}
+                                        <button type="button" class="btn btn-sm btn-danger delete-sale" 
+                                                data-sale-id="{{ sale.id }}" data-bs-toggle="modal" data-bs-target="#deleteConfirmModal">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
                             </tbody>
-                            <tfoot>
-                                <tr>
-                                    <td colspan="3" class="text-end"><strong>Subtotal:</strong></td>
-                                    <td><span id="subtotalAmount">$0.00</span></td>
-                                    <td></td>
-                                </tr>
-                                <tr id="loyaltyDiscountRow" style="display: none;">
-                                    <td colspan="3" class="text-end text-success"><strong>Loyalty Discount:</strong></td>
-                                    <td><span id="loyaltyDiscount">-$0.00</span></td>
-                                    <td></td>
-                                </tr>
-                                <tr>
-                                    <td colspan="3" class="text-end"><strong>Final Total:</strong></td>
-                                    <td><span id="totalAmount">$0.00</span></td>
-                                    <td></td>
-                                </tr>
-                            </tfoot>
                         </table>
                     </div>
+                </div>
+            </div>
+        </div>
 
-                    <!-- Hidden input for sale items -->
-                    <input type="hidden" name="items" id="saleItemsInput">
-
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary" id="processSaleBtn" disabled>Process Sale</button>
+        <!-- Products List -->
+        <div class="col-md-4">
+            <div class="sales-card">
+                <div class="card-header">
+                    <h5 class="mb-0">Products</h5>
+                    <div class="input-group mt-2">
+                        <input type="text" class="form-control" id="productSearch" placeholder="Search products...">
                     </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Recent Sales -->
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">Recent Sales</h5>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive mt-4">
-                    <h4>Recent Sales</h4>
-                    <table class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Customer</th>
-                                <th>Employee</th>
-                                <th>Total Amount</th>
-                                <th>Payment Method</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for sale in recent_sales %}
-                            <tr>
-                                <td>{{ sale.sale_date|date:"Y-m-d H:i" }}</td>
-                                <td>
-                                    {% if sale.customer %}
-                                        {{ sale.customer.first_name }} {{ sale.customer.last_name }}
-                                    {% else %}
-                                        Walk-in Customer
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {% if sale.employee %}
-                                        {{ sale.employee.user.first_name }} {{ sale.employee.user.last_name }}
-                                    {% else %}
-                                        Unknown Employee
-                                    {% endif %}
-                                </td>
-                                <td>${{ sale.total_amount|floatformat:2 }}</td>
-                                <td>{{ sale.payment_method|get_payment_method_display }}</td>
-                                <td>
-                                    <button type="button" class="btn btn-sm btn-info view-sale" 
-                                            data-bs-toggle="modal" data-bs-target="#saleDetailsModal" 
-                                            data-sale-id="{{ sale.id }}">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                    {% if user.employee.role == 'MANAGER' %}
-                                    <button type="button" class="btn btn-sm btn-danger delete-sale" 
-                                            data-sale-id="{{ sale.id }}" data-bs-toggle="modal" data-bs-target="#deleteConfirmModal">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Products List -->
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">Products</h5>
-                <div class="input-group mt-2">
-                    <input type="text" class="form-control" id="productSearch" placeholder="Search products...">
-                </div>
-            </div>
-            <div class="card-body" style="max-height: 600px; overflow-y: auto;">
-                <div class="list-group">
-                    {% for product in products %}
-                    <div class="list-group-item product-item" 
-                         data-id="{{ product.id }}"
-                         data-name="{{ product.name }}"
-                         data-price="{{ product.price }}"
-                         data-stock="{{ product.stock_quantity }}">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="mb-1">{{ product.name }}</h6>
-                                <small class="text-muted">Stock: {{ product.stock_quantity }}</small>
-                            </div>
-                            <div class="text-end">
-                                <div class="fw-bold">${{ product.price }}</div>
+                <div class="card-body" style="max-height: 600px; overflow-y: auto;">
+                    <div class="list-group">
+                        {% for product in products %}
+                        <div class="list-group-item product-item" 
+                             data-id="{{ product.id }}"
+                             data-name="{{ product.name }}"
+                             data-price="{{ product.price }}"
+                             data-stock="{{ product.stock_quantity }}">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">{{ product.name }}</h6>
+                                    <small class="text-muted">Stock: {{ product.stock_quantity }}</small>
+                                </div>
+                                <div class="text-end">
+                                    <div class="fw-bold">${{ product.price }}</div>
+                                </div>
                             </div>
                         </div>
+                        {% endfor %}
                     </div>
-                    {% endfor %}
                 </div>
             </div>
         </div>
