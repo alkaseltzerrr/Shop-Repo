@@ -10,7 +10,7 @@ from .models import (
     Category, Product, Supplier, Employee,
     Customer, Purchase, Sale, SaleItem, UserPreferences
 )
-from .forms import AdminRegistrationForm, PurchaseOrderForm
+from .forms import AdminRegistrationForm, PurchaseOrderForm, ProfileUpdateForm
 from django.http import JsonResponse
 from functools import wraps
 from decimal import Decimal
@@ -814,6 +814,12 @@ def profile(request):
         employee = request.user.employee
         context['employee'] = employee
         
+        # Get profile picture URL from database
+        if employee.profile_picture and employee.profile_picture.name:
+            context['profile_picture_url'] = employee.profile_picture.url
+        else:
+            context['profile_picture_url'] = None
+        
         # Calculate days employed
         days_employed = (timezone.now().date() - employee.hire_date).days
         context['days_employed'] = days_employed
@@ -852,6 +858,22 @@ def profile(request):
     return render(request, 'store_ops/profile.html', context)
 
 @login_required
+def update_profile_picture(request):
+    if not hasattr(request.user, 'employee'):
+        messages.error(request, 'Employee profile not found.')
+        return redirect('profile')
+    
+    if request.method == 'POST':
+        form = ProfileUpdateForm(request.POST, request.FILES, instance=request.user.employee)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Profile picture updated successfully!')
+        else:
+            messages.error(request, 'Failed to update profile picture. Please try again.')
+    
+    return redirect('profile')
+
+@login_required
 def save_preferences(request):
     if request.method == 'POST':
         preferences, created = UserPreferences.objects.get_or_create(user=request.user)
@@ -866,9 +888,10 @@ def save_preferences(request):
 
 def register(request):
     if request.method == 'POST':
-        form = AdminRegistrationForm(request.POST)
+        form = AdminRegistrationForm(request.POST, request.FILES)
         if form.is_valid():
             user = form.save()
+            messages.success(request, 'Registration successful! Please log in.')
             return redirect('login')
     else:
         form = AdminRegistrationForm()

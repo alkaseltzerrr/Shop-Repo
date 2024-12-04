@@ -133,21 +133,20 @@
 <div class="auth-container">
     <div class="auth-card">
         <div class="auth-header">
-            <img src="{% static 'images/logo.png' %}" alt="Store Management Logo" class="auth-logo">
-            <h1 class="auth-title">Create Account</h1>
-            <p class="auth-subtitle">Register as a new administrator</p>
+            <img src="{% static 'images/logo.png' %}" alt="Logo" class="auth-logo">
+            <h2 class="auth-title">Store Management System</h2>
+            <p class="auth-subtitle">Create a new admin account</p>
         </div>
         <div class="auth-body">
-            <form method="post" novalidate>
+            <form method="post" enctype="multipart/form-data" novalidate>
                 {% csrf_token %}
                 <div class="form-row">
                     {{ form|crispy }}
                 </div>
-                <button type="submit" class="btn auth-btn">Create Account</button>
+                <button type="submit" class="btn auth-btn">Register</button>
             </form>
-            <hr class="auth-divider">
-            <div class="auth-footer">
-                <p>Already have an account? <a href="{% url 'login' %}" class="auth-link">Sign in here</a></p>
+            <div class="text-center mt-4">
+                <p>Already have an account? <a href="{% url 'login' %}" class="auth-link">Login here</a></p>
             </div>
         </div>
     </div>

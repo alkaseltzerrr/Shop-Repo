@@ -12,6 +12,7 @@ class AdminRegistrationForm(UserCreationForm):
     address = forms.CharField(widget=forms.Textarea(attrs={'rows': 3}), required=True)
     date_of_birth = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}), required=True)
     emergency_contact = forms.CharField(required=True)
+    profile_picture = forms.ImageField(required=False, widget=forms.FileInput(attrs={'class': 'form-control'}))
 
     class Meta:
         model = User
@@ -22,12 +23,12 @@ class AdminRegistrationForm(UserCreationForm):
         user.email = self.cleaned_data['email']
         user.first_name = self.cleaned_data['first_name']
         user.last_name = self.cleaned_data['last_name']
-        user.is_staff = True  # Make user a staff member
-        user.is_superuser = True  # Make user a superuser
+        user.is_staff = True
+        user.is_superuser = True
         
         if commit:
             user.save()
-            # Create associated Employee profile
+            profile_picture = self.cleaned_data.get('profile_picture')
             Employee.objects.create(
                 user=user,
                 phone=self.cleaned_data['phone'],
@@ -36,9 +37,25 @@ class AdminRegistrationForm(UserCreationForm):
                 address=self.cleaned_data['address'],
                 date_of_birth=self.cleaned_data['date_of_birth'],
                 emergency_contact=self.cleaned_data['emergency_contact'],
-                salary=Decimal('5000.00')
+                salary=Decimal('5000.00'),
+                profile_picture=profile_picture
             )
         return user
+
+class ProfileUpdateForm(forms.ModelForm):
+    class Meta:
+        model = Employee
+        fields = ['profile_picture']
+        widgets = {
+            'profile_picture': forms.FileInput(attrs={'class': 'form-control'})
+        }
+
+    def clean_profile_picture(self):
+        profile_picture = self.cleaned_data.get('profile_picture')
+        if profile_picture:
+            if profile_picture.size > 5 * 1024 * 1024:  # 5MB limit
+                raise forms.ValidationError("Image file too large ( > 5MB )")
+            return profile_picture
 
 class PurchaseOrderForm(forms.ModelForm):
     class Meta:

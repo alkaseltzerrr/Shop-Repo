@@ -54,6 +54,7 @@ class Employee(models.Model):
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)
+    profile_picture = models.ImageField(upload_to='profile_pictures/', null=True, blank=True)
     phone = models.CharField(max_length=20)
     address = models.TextField()
     hire_date = models.DateField(auto_now_add=True)  
