@@ -134,6 +134,18 @@ def dashboard(request):
     loyal_customers = Customer.objects.exclude(loyalty_points=0).order_by('-loyalty_points')[:5]
     least_loyal_customers = Customer.objects.exclude(loyalty_points=0).order_by('loyalty_points')[:5]
     
+    # Loyalty Points Statistics
+    total_loyalty_points = Customer.objects.aggregate(total=Sum('loyalty_points'))['total'] or 0
+    active_loyalty_members = Customer.objects.filter(loyalty_points__gt=0).count()
+    
+    # Points used today
+    points_used_today = Sale.objects.filter(
+        sale_date__date=today,
+        points_used__gt=0
+    ).aggregate(total=Sum('points_used'))['total'] or 0
+    
+    points_value_today = float(points_used_today)  # Since 1 point = 1 peso
+    
     # Order Statistics
     pending_orders = Purchase.objects.filter(received=False, cancelled=False).count()
     received_orders = Purchase.objects.filter(received=True).count()
@@ -229,6 +241,10 @@ def dashboard(request):
         'quarterly_labels': json.dumps(quarterly_labels),
         'yearly_sales': json.dumps(yearly_sales),
         'yearly_labels': json.dumps(yearly_labels),
+        'total_loyalty_points': total_loyalty_points,
+        'active_loyalty_members': active_loyalty_members,
+        'points_used_today': points_used_today,
+        'points_value_today': points_value_today,
     }
     
     return render(request, 'store_ops/dashboard.html', context)
@@ -417,7 +433,8 @@ def lookup_customer(request):
                         'id': customer.id,
                         'name': customer.get_full_name(),
                         'email': customer.email,
-                        'phone': customer.phone
+                        'phone': customer.phone,
+                        'loyalty_points': customer.loyalty_points
                     })
                 return JsonResponse({'results': results})
             
@@ -438,7 +455,9 @@ def delete_sale(request, pk):
 @login_required
 @role_required('MANAGER', 'CASHIER', 'SALES_ASSOCIATE')
 def sales(request):
-    recent_sales = Sale.objects.select_related('customer').order_by('-sale_date')[:50]
+    recent_sales = Sale.objects.select_related('customer').order_by(
+        '-sale_date'
+    )[:50]
     products = Product.objects.all().order_by('name')
     context = {
         'recent_sales': recent_sales,
@@ -454,16 +473,28 @@ def process_sale(request):
             data = json.loads(request.POST.get('items'))
             customer_id = request.POST.get('customer')
             payment_method = request.POST.get('payment_method')
+            points_used = Decimal(request.POST.get('points_used', '0'))
+
+            # Validate points if using them
+            if points_used > 0 and customer_id:
+                customer = Customer.objects.get(id=customer_id)
+                if points_used > customer.loyalty_points:
+                    return JsonResponse({
+                        'status': 'error',
+                        'message': 'Not enough loyalty points'
+                    })
 
             # Create sale
             sale = Sale.objects.create(
                 customer_id=customer_id if customer_id else None,
                 employee=request.user.employee,  # Set the logged-in employee
                 payment_method=payment_method,
-                total_amount=0  # Will be updated after adding items
+                total_amount=0,  # Will be updated after adding items
+                points_used=points_used  # Record points used
             )
 
             total_amount = Decimal('0.00')
+
             # Process each item
             for item in data:
                 product = Product.objects.get(id=item['product_id'])
@@ -495,20 +526,28 @@ def process_sale(request):
                 
                 total_amount += subtotal
             
-            # Update sale total
-            sale.total_amount = total_amount
+            # Update sale total (after points deduction)
+            final_amount = max(Decimal('0.00'), total_amount - points_used)
+            sale.total_amount = final_amount
+            sale.original_amount = total_amount  # Store original amount before points
             sale.save()
             
-            # Add loyalty points if customer exists
+            # Update customer loyalty points if points were used
+            if points_used > 0 and customer_id:
+                customer = Customer.objects.get(id=customer_id)
+                customer.loyalty_points -= points_used
+                customer.save()
+            
+            # Add new loyalty points if customer exists (based on final amount paid)
             if customer_id:
                 customer = Customer.objects.get(id=customer_id)
-                # Calculate points: 0.5 points per 100 pesos
-                points_earned = int((total_amount / Decimal('100.00')) * Decimal('0.5'))
+                # Calculate points: 0.5 points per 100 pesos, based on amount after points redemption
+                points_earned = int((final_amount / Decimal('100.00')) * Decimal('0.5'))
                 if points_earned > 0:
                     customer.loyalty_points += points_earned
                     customer.save()
                     messages.success(request, f'Added {points_earned} loyalty points to {customer.get_full_name()}')
-            
+
             messages.success(request, 'Sale processed successfully')
             return JsonResponse({
                 'status': 'success',

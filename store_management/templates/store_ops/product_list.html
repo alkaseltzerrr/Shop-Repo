@@ -3,16 +3,187 @@
 
 {% block title %}Products - Store Management System{% endblock %}
 
-{% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3">Products</h1>
-    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProductModal">
-        <i class="fas fa-plus"></i> Add Product
-    </button>
-</div>
+{% block extra_css %}
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+        --success-gradient: linear-gradient(135deg, #1cc88a 0%, #13855c 100%);
+        --info-gradient: linear-gradient(135deg, #36b9cc 0%, #258391 100%);
+        --warning-gradient: linear-gradient(135deg, #f6c23e 0%, #dda20a 100%);
+    }
 
-<div class="card">
-    <div class="card-body">
+    .product-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .page-header {
+        background: var(--primary-gradient);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .page-header h1 {
+        color: white !important;
+        margin: 0;
+    }
+
+    .add-product-btn {
+        background-color: rgba(255, 255, 255, 0.2);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .add-product-btn:hover {
+        background-color: rgba(255, 255, 255, 0.3);
+        border-color: rgba(255, 255, 255, 0.4);
+        color: white;
+    }
+
+    .product-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+        overflow: hidden;
+    }
+
+    .table {
+        margin-bottom: 0;
+    }
+
+    .table thead th {
+        background-color: rgba(78, 115, 223, 0.1);
+        border-bottom: none;
+        color: #4e73df;
+        font-weight: 600;
+        padding: 1rem;
+    }
+
+    .table tbody td {
+        padding: 1rem;
+        vertical-align: middle;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .table tbody tr:hover {
+        background-color: rgba(78, 115, 223, 0.05);
+    }
+
+    .product-name {
+        font-weight: 600;
+        color: #4e73df;
+    }
+
+    .product-price {
+        font-family: monospace;
+        font-weight: 600;
+        color: #2ecc71;
+    }
+
+    .product-stock {
+        font-family: monospace;
+    }
+
+    .stock-badge {
+        padding: 0.5em 1em;
+        font-weight: 500;
+        border-radius: 6px;
+    }
+
+    .stock-badge.low {
+        background-color: rgba(231, 76, 60, 0.1);
+        color: #e74c3c;
+        border: 1px solid #e74c3c;
+    }
+
+    .stock-badge.medium {
+        background-color: rgba(243, 156, 18, 0.1);
+        color: #f39c12;
+        border: 1px solid #f39c12;
+    }
+
+    .stock-badge.good {
+        background-color: rgba(46, 204, 113, 0.1);
+        color: #2ecc71;
+        border: 1px solid #2ecc71;
+    }
+
+    .action-btn {
+        padding: 0.375rem 0.75rem;
+        border-radius: 6px;
+        transition: all 0.3s ease;
+        margin-right: 0.25rem;
+    }
+
+    .action-btn:hover {
+        transform: translateY(-2px);
+    }
+
+    .modal-content {
+        border-radius: 15px;
+        border: none;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .modal-header {
+        background: var(--primary-gradient);
+        color: white;
+        border-radius: 15px 15px 0 0;
+        padding: 1.5rem;
+    }
+
+    .modal-title {
+        color: white;
+        font-weight: 600;
+    }
+
+    .modal-header .btn-close {
+        filter: brightness(0) invert(1);
+    }
+
+    .modal-body {
+        padding: 1.5rem;
+    }
+
+    .form-label {
+        font-weight: 500;
+        color: #4e73df;
+    }
+
+    .form-control {
+        border-radius: 8px;
+        padding: 0.75rem;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .form-control:focus {
+        border-color: #4e73df;
+        box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="product-container">
+    <div class="page-header">
+        <h1 class="h3 mb-0">Products</h1>
+        <button class="btn add-product-btn" data-bs-toggle="modal" data-bs-target="#addProductModal">
+            <i class="fas fa-plus me-2"></i> Add Product
+        </button>
+    </div>
+
+    <div class="product-card">
         <div class="table-responsive">
             <table class="table table-hover">
                 <thead>
@@ -29,23 +200,25 @@
                 <tbody>
                     {% for product in products %}
                     <tr>
-                        <td>{{ product.name }}</td>
+                        <td class="product-name">{{ product.name }}</td>
                         <td>{{ product.sku }}</td>
                         <td>{{ product.category.name }}</td>
                         <td>{{ product.supplier.name }}</td>
-                        <td>${{ product.price }}</td>
+                        <td class="product-price">${{ product.price }}</td>
                         <td>
                             {% if product.stock_quantity <= product.reorder_level %}
-                            <span class="badge bg-danger">{{ product.stock_quantity }}</span>
+                            <span class="stock-badge low">{{ product.stock_quantity }}</span>
+                            {% elif product.stock_quantity <= product.reorder_level|add:"10" %}
+                            <span class="stock-badge medium">{{ product.stock_quantity }}</span>
                             {% else %}
-                            <span class="badge bg-success">{{ product.stock_quantity }}</span>
+                            <span class="stock-badge good">{{ product.stock_quantity }}</span>
                             {% endif %}
                         </td>
                         <td>
-                            <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#editProductModal{{ product.id }}">
+                            <button class="btn btn-sm btn-info action-btn" data-bs-toggle="modal" data-bs-target="#editProductModal{{ product.id }}">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteProductModal{{ product.id }}">
+                            <button class="btn btn-sm btn-danger action-btn" data-bs-toggle="modal" data-bs-target="#deleteProductModal{{ product.id }}">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </td>

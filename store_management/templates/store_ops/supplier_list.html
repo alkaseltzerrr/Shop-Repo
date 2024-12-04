@@ -3,16 +3,164 @@
 
 {% block title %}Suppliers - Store Management System{% endblock %}
 
-{% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3">Suppliers</h1>
-    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addSupplierModal">
-        <i class="fas fa-plus"></i> Add Supplier
-    </button>
-</div>
+{% block extra_css %}
+<style>
+    .supplier-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
 
-<div class="card">
-    <div class="card-body">
+    .page-header {
+        background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .page-header h1 {
+        color: white !important;
+        margin: 0;
+    }
+
+    .add-supplier-btn {
+        background-color: rgba(255, 255, 255, 0.2);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .add-supplier-btn:hover {
+        background-color: rgba(255, 255, 255, 0.3);
+        border-color: rgba(255, 255, 255, 0.4);
+        color: white;
+    }
+
+    .supplier-card {
+        background: var(--card-bg);
+        border-radius: 15px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+        overflow: hidden;
+    }
+
+    .table {
+        margin-bottom: 0;
+    }
+
+    .table thead th {
+        background-color: rgba(78, 115, 223, 0.1);
+        border-bottom: none;
+        color: var(--text-color);
+        font-weight: 600;
+        padding: 1rem;
+    }
+
+    .table tbody td {
+        padding: 1rem;
+        vertical-align: middle;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .table tbody tr:hover {
+        background-color: rgba(78, 115, 223, 0.05);
+    }
+
+    .badge {
+        padding: 0.5em 1em;
+        font-weight: 500;
+        border-radius: 6px;
+    }
+
+    .action-btn {
+        padding: 0.375rem 0.75rem;
+        border-radius: 6px;
+        transition: all 0.3s ease;
+        margin-right: 0.25rem;
+    }
+
+    .action-btn:hover {
+        transform: translateY(-2px);
+    }
+
+    .action-btn:last-child {
+        margin-right: 0;
+    }
+
+    .modal-content {
+        border-radius: 15px;
+        border: none;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .modal-header {
+        background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+        color: white;
+        border-radius: 15px 15px 0 0;
+        padding: 1.5rem;
+    }
+
+    .modal-title {
+        color: white;
+        font-weight: 600;
+    }
+
+    .modal-header .btn-close {
+        color: white;
+        opacity: 0.8;
+    }
+
+    .modal-body {
+        padding: 1.5rem;
+    }
+
+    .form-label {
+        font-weight: 500;
+        color: var(--text-color);
+    }
+
+    .form-control {
+        border-radius: 8px;
+        padding: 0.75rem;
+        border: 1px solid var(--border-color);
+    }
+
+    .form-control:focus {
+        border-color: #4e73df;
+        box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+    }
+
+    .supplier-name {
+        font-weight: 600;
+        color: #4e73df;
+    }
+
+    .description {
+        max-width: 300px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="supplier-container">
+    <div class="page-header">
+        <h1 class="h3 mb-0">Suppliers</h1>
+        <button class="btn add-supplier-btn" data-bs-toggle="modal" data-bs-target="#addSupplierModal">
+            <i class="fas fa-plus me-2"></i> Add Supplier
+        </button>
+    </div>
+
+    <div class="supplier-card">
         <div class="table-responsive">
             <table class="table table-hover">
                 <thead>
@@ -29,8 +177,8 @@
                 <tbody>
                     {% for supplier in suppliers %}
                     <tr>
-                        <td>{{ supplier.name }}</td>
-                        <td>{{ supplier.description|default:"No description available" }}</td>
+                        <td class="supplier-name">{{ supplier.name }}</td>
+                        <td class="description">{{ supplier.description|default:"No description available" }}</td>
                         <td>{{ supplier.contact_person }}</td>
                         <td>{{ supplier.email }}</td>
                         <td>{{ supplier.phone }}</td>
@@ -42,10 +190,10 @@
                             {% endif %}
                         </td>
                         <td>
-                            <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#editSupplierModal{{ supplier.id }}">
+                            <button class="btn btn-sm btn-info action-btn" data-bs-toggle="modal" data-bs-target="#editSupplierModal{{ supplier.id }}">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteSupplierModal{{ supplier.id }}">
+                            <button class="btn btn-sm btn-danger action-btn" data-bs-toggle="modal" data-bs-target="#deleteSupplierModal{{ supplier.id }}">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </td>
@@ -192,4 +340,18 @@
     </div>
 </div>
 {% endfor %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add smooth fade-in animation for modals
+        const modals = document.querySelectorAll('.modal');
+        modals.forEach(modal => {
+            modal.addEventListener('show.bs.modal', function() {
+                this.style.animation = 'fadeIn 0.3s';
+            });
+        });
+    });
+</script>
 {% endblock %}

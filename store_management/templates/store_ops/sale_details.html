@@ -26,7 +26,14 @@
                     <h5>Sale Information</h5>
                     <p><strong>Date:</strong> {{ sale.date|date:"F d, Y H:i" }}</p>
                     <p><strong>Payment Method:</strong> {{ sale.payment_method|get_payment_method_display }}</p>
-                    <p><strong>Total Amount:</strong> ₱{{ sale.total_amount|floatformat:2 }}</p>
+                    {% if sale.original_amount %}
+                        <p><strong>Original Amount:</strong> ₱{{ sale.original_amount|floatformat:2 }}</p>
+                        {% if sale.points_used %}
+                            <p><strong>Loyalty Points Used:</strong> {{ sale.points_used|floatformat:0 }} points</p>
+                            <p><strong>Points Discount:</strong> ₱{{ sale.points_discount|floatformat:2 }}</p>
+                        {% endif %}
+                    {% endif %}
+                    <p><strong>Final Amount:</strong> ₱{{ sale.total_amount|floatformat:2 }}</p>
                 </div>
             </div>
 
@@ -52,8 +59,20 @@
                         {% endfor %}
                     </tbody>
                     <tfoot>
+                        {% if sale.original_amount %}
                         <tr>
-                            <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                            <td colspan="3" class="text-end"><strong>Subtotal:</strong></td>
+                            <td>₱{{ sale.original_amount|floatformat:2 }}</td>
+                        </tr>
+                        {% if sale.points_used %}
+                        <tr class="text-success">
+                            <td colspan="3" class="text-end"><strong>Loyalty Points Discount:</strong></td>
+                            <td>-₱{{ sale.points_discount|floatformat:2 }}</td>
+                        </tr>
+                        {% endif %}
+                        {% endif %}
+                        <tr>
+                            <td colspan="3" class="text-end"><strong>Final Total:</strong></td>
                             <td><strong>₱{{ sale.total_amount|floatformat:2 }}</strong></td>
                         </tr>
                     </tfoot>
