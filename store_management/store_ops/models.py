@@ -110,10 +110,25 @@ class Sale(models.Model):
     employee = models.ForeignKey(Employee, on_delete=models.PROTECT, related_name='sales', null=True, blank=True)
     sale_date = models.DateTimeField(auto_now_add=True)
     total_amount = models.DecimalField(max_digits=12, decimal_places=2)
+    original_amount = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True, help_text="Total amount before loyalty points discount")
+    points_used = models.DecimalField(max_digits=12, decimal_places=2, default=0, help_text="Amount of loyalty points used for discount")
     payment_method = models.CharField(max_length=10, choices=PAYMENT_CHOICES, default='CASH')
     
     def __str__(self):
         return f"Sale {self.id} - {self.sale_date.strftime('%Y-%m-%d %H:%M')}"
+
+    @property
+    def points_discount(self):
+        """Returns the discount amount from loyalty points"""
+        if self.original_amount is None:
+            return Decimal('0.00')
+        return self.original_amount - self.total_amount
+
+    def save(self, *args, **kwargs):
+        # Set original_amount to total_amount if not set
+        if self.original_amount is None:
+            self.original_amount = self.total_amount
+        super().save(*args, **kwargs)
 
 class SaleItem(models.Model):
     sale = models.ForeignKey(Sale, related_name='items', on_delete=models.CASCADE)

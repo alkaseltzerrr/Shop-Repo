@@ -44,6 +44,26 @@
                                 </button>
                             </div>
                             <small id="customerInfo" class="text-muted"></small>
+                            <div id="loyaltyPointsSection" class="mt-2" style="display: none;">
+                                <div class="alert alert-info">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong>Available Points:</strong> <span id="availablePoints">0</span>
+                                            <br>
+                                            <small class="text-muted">1 point = $1 discount</small>
+                                        </div>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="usePoints">
+                                            <label class="form-check-label" for="usePoints">Use Points</label>
+                                        </div>
+                                    </div>
+                                    <div id="pointsToUseDiv" class="mt-2" style="display: none;">
+                                        <label class="form-label">Points to Use:</label>
+                                        <input type="number" class="form-control" id="pointsToUse" name="points_to_use" min="0" value="0">
+                                        <small class="text-muted">Maximum points you can use: <span id="maxPointsAllowed">0</span></small>
+                                    </div>
+                                </div>
+                            </div>
                             <div class="form-text text-muted">Please enter both first and last name for accurate lookup</div>
                         </div>
                         <div class="col-md-6">
@@ -72,7 +92,17 @@
                             </tbody>
                             <tfoot>
                                 <tr>
-                                    <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                                    <td colspan="3" class="text-end"><strong>Subtotal:</strong></td>
+                                    <td><span id="subtotalAmount">$0.00</span></td>
+                                    <td></td>
+                                </tr>
+                                <tr id="loyaltyDiscountRow" style="display: none;">
+                                    <td colspan="3" class="text-end text-success"><strong>Loyalty Discount:</strong></td>
+                                    <td><span id="loyaltyDiscount">-$0.00</span></td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3" class="text-end"><strong>Final Total:</strong></td>
                                     <td><span id="totalAmount">$0.00</span></td>
                                     <td></td>
                                 </tr>
@@ -269,6 +299,8 @@
 <script>
     // Initialize variables
     let saleItems = [];
+    let customerLoyaltyPoints = 0;
+    let currentSubtotal = 0;
 
     $(document).ready(function() {
         // Customer search handlers
@@ -325,41 +357,41 @@
             
             if (!validateSaleForm()) return;
             
-            // Prepare form data
-            const formData = new FormData(this);
-            formData.set('items', JSON.stringify(saleItems));
-
-            // Disable submit button
-            $('#processSaleBtn').prop('disabled', true).html(
-                '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...'
-            );
+            const pointsToUse = $('#usePoints').is(':checked') ? Number($('#pointsToUse').val()) : 0;
             
+            const formData = {
+                items: JSON.stringify(saleItems),
+                customer: $('#customerId').val(),
+                payment_method: $('select[name="payment_method"]').val(),
+                points_used: pointsToUse
+            };
+
+            $('#processSaleBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Processing...');
+
             $.ajax({
                 url: $(this).attr('action'),
                 method: 'POST',
                 data: formData,
-                processData: false,
-                contentType: false,
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
                 success: function(response) {
                     if (response.status === 'success') {
-                        // Reset form
                         saleItems = [];
                         updateSaleItemsTable();
                         updateTotal();
                         clearCustomerInfo();
-                        
-                        // Show success message and refresh page
                         alert('Sale processed successfully!');
                         window.location.reload();
                     } else {
                         alert(response.message || 'Error processing sale');
                     }
                 },
-                error: function(xhr) {
-                    alert('Error processing sale. Please try again.');
+                error: function(xhr, status, error) {
+                    console.error('Error:', error);
+                    alert('Error processing sale');
                 },
                 complete: function() {
-                    // Re-enable submit button
                     $('#processSaleBtn').prop('disabled', false).html('Process Sale');
                 }
             });
@@ -388,7 +420,7 @@
                         alert(response.message || 'Error deleting sale');
                     }
                 },
-                error: function(xhr) {
+                error: function(xhr, status, error) {
                     $('#deleteConfirmModal').modal('hide');
                     const response = xhr.responseJSON || {};
                     alert(response.message || 'Error deleting sale. Please try again.');
@@ -453,6 +485,7 @@
                     if (results.length > 0) {
                         const customer = results[0];
                         $('#customerId').val(customer.id);
+                        customerLoyaltyPoints = customer.loyalty_points || 0;
                         $('#customerInfo').html(
                             `<strong>Found:</strong> ${customer.name}<br>` +
                             `<strong>Email:</strong> ${customer.email || 'N/A'}<br>` +
@@ -460,28 +493,32 @@
                         );
                         $('#customerInfo').removeClass('text-danger').addClass('text-success');
                         $('#processSaleBtn').prop('disabled', false);
+                        
+                        // Show loyalty points section
+                        $('#loyaltyPointsSection').show();
+                        $('#availablePoints').text(customerLoyaltyPoints);
+                        updateMaxPointsAllowed();
                     } else {
-                        $('#customerId').val('');
-                        $('#customerInfo').html('No customer found with this name. Please enter full name (e.g. John Smith)');
-                        $('#customerInfo').removeClass('text-success').addClass('text-danger');
-                        $('#processSaleBtn').prop('disabled', true);
+                        clearCustomerInfo();
                     }
                 },
                 error: function(xhr, status, error) {
                     console.error('Error:', error);
-                    $('#customerInfo').html('Error looking up customer');
-                    $('#customerInfo').removeClass('text-success').addClass('text-danger');
-                    $('#processSaleBtn').prop('disabled', true);
+                    clearCustomerInfo();
                 }
             });
         }
 
         function clearCustomerInfo() {
-            $('#customerInput').val('');
             $('#customerId').val('');
-            $('#customerInfo').html('');
-            $('#customerInfo').removeClass('text-success text-danger');
+            $('#customerInfo').html('No customer found with this name. Please enter full name (e.g. John Smith)');
+            $('#customerInfo').removeClass('text-success').addClass('text-danger');
             $('#processSaleBtn').prop('disabled', true);
+            $('#loyaltyPointsSection').hide();
+            customerLoyaltyPoints = 0;
+            $('#usePoints').prop('checked', false);
+            $('#pointsToUseDiv').hide();
+            updateTotal();
         }
 
         function addProduct(productId, productName, price, stock) {
@@ -589,9 +626,59 @@
         }
 
         function updateTotal() {
-            const total = saleItems.reduce((sum, item) => sum + (Number(item.price) * item.quantity), 0);
-            $('#totalAmount').text(`$${total.toFixed(2)}`);
+            currentSubtotal = saleItems.reduce((sum, item) => sum + (Number(item.price) * item.quantity), 0);
+            $('#subtotalAmount').text(`$${currentSubtotal.toFixed(2)}`);
+            
+            updateMaxPointsAllowed();
+            
+            let finalTotal = currentSubtotal;
+            let loyaltyDiscount = 0;
+            
+            if ($('#usePoints').is(':checked')) {
+                const pointsToUse = Number($('#pointsToUse').val());
+                loyaltyDiscount = Math.min(pointsToUse, currentSubtotal);
+                finalTotal = Math.max(0, currentSubtotal - loyaltyDiscount);
+                
+                $('#loyaltyDiscountRow').show();
+                $('#loyaltyDiscount').text(`-$${loyaltyDiscount.toFixed(2)}`);
+            } else {
+                $('#loyaltyDiscountRow').hide();
+            }
+            
+            $('#totalAmount').text(`$${finalTotal.toFixed(2)}`);
         }
+
+        function updateMaxPointsAllowed() {
+            const maxPoints = Math.min(customerLoyaltyPoints, Math.floor(currentSubtotal));
+            $('#maxPointsAllowed').text(maxPoints);
+            $('#pointsToUse').attr('max', maxPoints);
+            
+            // Adjust points to use if it exceeds the new maximum
+            const currentPointsToUse = Number($('#pointsToUse').val());
+            if (currentPointsToUse > maxPoints) {
+                $('#pointsToUse').val(maxPoints);
+            }
+        }
+
+        // Add event listeners for loyalty points
+        $('#usePoints').change(function() {
+            const isChecked = $(this).is(':checked');
+            $('#pointsToUseDiv').toggle(isChecked);
+            if (isChecked) {
+                const maxPoints = Math.min(customerLoyaltyPoints, Math.floor(currentSubtotal));
+                $('#pointsToUse').val(maxPoints);
+            }
+            updateTotal();
+        });
+
+        $('#pointsToUse').on('input', function() {
+            const value = Number($(this).val());
+            const max = Number($(this).attr('max'));
+            if (value > max) {
+                $(this).val(max);
+            }
+            updateTotal();
+        });
 
         function getCookie(name) {
             let cookieValue = null;
