@@ -44,13 +44,15 @@
         color: var(--text-color);
     }
 
-    .form-control, .form-select {
+    .form-control,
+    .form-select {
         border-radius: 8px;
         padding: 0.75rem;
         border: 1px solid var(--border-color);
     }
 
-    .form-control:focus, .form-select:focus {
+    .form-control:focus,
+    .form-select:focus {
         border-color: #4e73df;
         box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
     }
@@ -167,8 +169,8 @@
                             <div class="col-md-6">
                                 <label class="form-label">Customer (Full Name Required)</label>
                                 <div class="input-group">
-                                    <input type="text" class="form-control" id="customerInput" 
-                                           placeholder="Enter full name (e.g. John Smith)">
+                                    <input type="text" class="form-control" id="customerInput"
+                                        placeholder="Enter full name (e.g. John Smith)">
                                     <input type="hidden" name="customer" id="customerId">
                                     <button class="btn btn-primary" type="button" id="checkCustomer">
                                         <i class="fas fa-check"></i> Check
@@ -193,12 +195,15 @@
                                         </div>
                                         <div id="pointsToUseDiv" class="mt-2" style="display: none;">
                                             <label class="form-label">Points to Use:</label>
-                                            <input type="number" class="form-control" id="pointsToUse" name="points_to_use" min="0" value="0">
-                                            <small class="text-muted">Maximum points you can use: <span id="maxPointsAllowed">0</span></small>
+                                            <input type="number" class="form-control" id="pointsToUse"
+                                                name="points_to_use" min="0" value="0">
+                                            <small class="text-muted">Maximum points you can use: <span
+                                                    id="maxPointsAllowed">0</span></small>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="form-text text-muted">Please enter both first and last name for accurate lookup</div>
+                                <div class="form-text text-muted">Please enter both first and last name for accurate
+                                    lookup</div>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Payment Method</label>
@@ -231,7 +236,8 @@
                                         <td></td>
                                     </tr>
                                     <tr id="loyaltyDiscountRow" style="display: none;">
-                                        <td colspan="3" class="text-end text-success"><strong>Loyalty Discount:</strong></td>
+                                        <td colspan="3" class="text-end text-success"><strong>Loyalty Discount:</strong>
+                                        </td>
                                         <td><span id="loyaltyDiscount">-$0.00</span></td>
                                         <td></td>
                                     </tr>
@@ -248,7 +254,8 @@
                         <input type="hidden" name="items" id="saleItemsInput">
 
                         <div class="d-grid">
-                            <button type="submit" class="btn btn-primary" id="processSaleBtn" disabled>Process Sale</button>
+                            <button type="submit" class="btn btn-primary" id="processSaleBtn" disabled>Process
+                                Sale</button>
                         </div>
                     </form>
                 </div>
@@ -279,29 +286,30 @@
                                     <td>{{ sale.sale_date|date:"Y-m-d H:i" }}</td>
                                     <td>
                                         {% if sale.customer %}
-                                            {{ sale.customer.first_name }} {{ sale.customer.last_name }}
+                                        {{ sale.customer.first_name }} {{ sale.customer.last_name }}
                                         {% else %}
-                                            Walk-in Customer
+                                        Walk-in Customer
                                         {% endif %}
                                     </td>
                                     <td>
                                         {% if sale.employee %}
-                                            {{ sale.employee.user.first_name }} {{ sale.employee.user.last_name }}
+                                        {{ sale.employee.user.first_name }} {{ sale.employee.user.last_name }}
                                         {% else %}
-                                            Unknown Employee
+                                        Unknown Employee
                                         {% endif %}
                                     </td>
                                     <td>${{ sale.total_amount|floatformat:2 }}</td>
                                     <td>{{ sale.payment_method|get_payment_method_display }}</td>
                                     <td>
-                                        <button type="button" class="btn btn-sm btn-info view-sale" 
-                                                data-bs-toggle="modal" data-bs-target="#saleDetailsModal" 
-                                                data-sale-id="{{ sale.id }}">
+                                        <button type="button" class="btn btn-sm btn-info view-sale"
+                                            data-bs-toggle="modal" data-bs-target="#saleDetailsModal"
+                                            data-sale-id="{{ sale.id }}">
                                             <i class="fas fa-eye"></i>
                                         </button>
                                         {% if user.employee.role == 'MANAGER' %}
-                                        <button type="button" class="btn btn-sm btn-danger delete-sale" 
-                                                data-sale-id="{{ sale.id }}" data-bs-toggle="modal" data-bs-target="#deleteConfirmModal">
+                                        <button type="button" class="btn btn-sm btn-danger delete-sale"
+                                            data-sale-id="{{ sale.id }}" data-bs-toggle="modal"
+                                            data-bs-target="#deleteConfirmModal">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                         {% endif %}
@@ -327,11 +335,9 @@
                 <div class="card-body" style="max-height: 600px; overflow-y: auto;">
                     <div class="list-group">
                         {% for product in products %}
-                        <div class="list-group-item product-item" 
-                             data-id="{{ product.id }}"
-                             data-name="{{ product.name }}"
-                             data-price="{{ product.price }}"
-                             data-stock="{{ product.stock_quantity }}">
+                        <div class="list-group-item product-item" data-id="{{ product.id }}"
+                            data-name="{{ product.name }}" data-price="{{ product.price }}"
+                            data-stock="{{ product.stock_quantity }}">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
                                     <h6 class="mb-1">{{ product.name }}</h6>
@@ -437,9 +443,9 @@
     let customerLoyaltyPoints = 0;
     let currentSubtotal = 0;
 
-    $(document).ready(function() {
+    $(document).ready(function () {
         // Customer search handlers
-        $('#checkCustomer').on('click', function() {
+        $('#checkCustomer').on('click', function () {
             const query = $('#customerInput').val().trim();
             if (query) {
                 lookupCustomer(query);
@@ -447,7 +453,7 @@
         });
 
         // Customer input enter key handler
-        $('#customerInput').on('keypress', function(e) {
+        $('#customerInput').on('keypress', function (e) {
             if (e.which === 13) {  // Enter key
                 e.preventDefault();
                 const query = $(this).val().trim();
@@ -461,16 +467,16 @@
         $('#clearCustomer').on('click', clearCustomerInfo);
 
         // Product search handler
-        $('#productSearch').on('input', function() {
+        $('#productSearch').on('input', function () {
             const query = $(this).val().toLowerCase();
-            $('.product-item').each(function() {
+            $('.product-item').each(function () {
                 const name = $(this).data('name').toLowerCase();
                 $(this).toggle(name.includes(query));
             });
         });
 
         // Product item click handler
-        $('.product-item').on('click', function() {
+        $('.product-item').on('click', function () {
             const productId = $(this).data('id');
             const productName = $(this).data('name');
             const price = $(this).data('price');
@@ -487,13 +493,13 @@
         }
 
         // Process sale form submission
-        $('#saleForm').on('submit', function(e) {
+        $('#saleForm').on('submit', function (e) {
             e.preventDefault();
-            
+
             if (!validateSaleForm()) return;
-            
+
             const pointsToUse = $('#usePoints').is(':checked') ? Number($('#pointsToUse').val()) : 0;
-            
+
             const formData = {
                 items: JSON.stringify(saleItems),
                 customer: $('#customerId').val(),
@@ -510,7 +516,7 @@
                 headers: {
                     'X-CSRFToken': getCookie('csrftoken')
                 },
-                success: function(response) {
+                success: function (response) {
                     if (response.status === 'success') {
                         saleItems = [];
                         updateSaleItemsTable();
@@ -522,24 +528,24 @@
                         alert(response.message || 'Error processing sale');
                     }
                 },
-                error: function(xhr, status, error) {
+                error: function (xhr, status, error) {
                     console.error('Error:', error);
                     alert('Error processing sale');
                 },
-                complete: function() {
+                complete: function () {
                     $('#processSaleBtn').prop('disabled', false).html('Process Sale');
                 }
             });
         });
 
         // Delete sale button handler
-        $('.delete-sale').on('click', function() {
+        $('.delete-sale').on('click', function () {
             const saleId = $(this).data('sale-id');
             $('#deleteConfirmModal').data('sale-id', saleId);
         });
 
         // Confirm delete handler
-        $('#confirmDelete').on('click', function() {
+        $('#confirmDelete').on('click', function () {
             const saleId = $('#deleteConfirmModal').data('sale-id');
             $.ajax({
                 url: `/sales/${saleId}/delete/`,
@@ -547,7 +553,7 @@
                 headers: {
                     'X-CSRFToken': getCookie('csrftoken')
                 },
-                success: function(response) {
+                success: function (response) {
                     $('#deleteConfirmModal').modal('hide');
                     if (response.status === 'success') {
                         location.reload();
@@ -555,7 +561,7 @@
                         alert(response.message || 'Error deleting sale');
                     }
                 },
-                error: function(xhr, status, error) {
+                error: function (xhr, status, error) {
                     $('#deleteConfirmModal').modal('hide');
                     const response = xhr.responseJSON || {};
                     alert(response.message || 'Error deleting sale. Please try again.');
@@ -564,30 +570,30 @@
         });
 
         // View sale details
-        $('.view-sale').on('click', function() {
+        $('.view-sale').on('click', function () {
             var saleId = $(this).data('sale-id');
             $.ajax({
                 url: `/sales/${saleId}/details/`,
                 method: 'GET',
-                success: function(data) {
+                success: function (data) {
                     $('#saleId').text(data.id);
                     $('#saleDate').text(data.date);
                     $('#paymentMethod').text(data.payment_method);
-                    
+
                     // Handle customer information
                     $('#customerName').text(data.customer || 'Walk-in Customer');
                     $('#customerEmail').text(data.customer_email || 'N/A');
                     $('#customerPhone').text(data.customer_phone || 'N/A');
-                    
+
                     // Handle employee information
                     $('#employeeName').text(data.employee || 'Unknown Employee');
                     $('#employeeEmail').text(data.employee_email || 'N/A');
                     $('#employeePhone').text(data.employee_phone || 'N/A');
-                    
+
                     // Update items table
                     var tbody = $('#saleItemsTable tbody');
                     tbody.empty();
-                    data.items.forEach(function(item) {
+                    data.items.forEach(function (item) {
                         tbody.append(`
                             <tr>
                                 <td>${item.product_name}</td>
@@ -597,10 +603,10 @@
                             </tr>
                         `);
                     });
-                    
+
                     $('#saleTotal').text(`$${data.total_amount.toFixed(2)}`);
                 },
-                error: function(xhr, status, error) {
+                error: function (xhr, status, error) {
                     console.error('Error fetching sale details:', error);
                     alert('Error loading sale details. Please try again.');
                 }
@@ -609,13 +615,13 @@
 
         function lookupCustomer(query) {
             $.ajax({
-                url: '/lookup_customer/',  
+                url: '/lookup_customer/',
                 method: 'GET',
                 data: { query: query },
                 headers: {
                     'X-CSRFToken': getCookie('csrftoken')
                 },
-                success: function(response) {
+                success: function (response) {
                     const results = response.results;
                     if (results.length > 0) {
                         const customer = results[0];
@@ -628,7 +634,7 @@
                         );
                         $('#customerInfo').removeClass('text-danger').addClass('text-success');
                         $('#processSaleBtn').prop('disabled', false);
-                        
+
                         // Show loyalty points section
                         $('#loyaltyPointsSection').show();
                         $('#availablePoints').text(customerLoyaltyPoints);
@@ -637,7 +643,7 @@
                         clearCustomerInfo();
                     }
                 },
-                error: function(xhr, status, error) {
+                error: function (xhr, status, error) {
                     console.error('Error:', error);
                     clearCustomerInfo();
                 }
@@ -687,16 +693,17 @@
                         <td>${item.name}</td>
                         <td>$${Number(item.price).toFixed(2)}</td>
                         <td>
-                            <div class="input-group input-group-sm" style="width: 120px;">
-                                <button class="btn btn-outline-secondary decrease-qty" type="button" data-product-id="${item.product_id}">
-                                    <i class="fas fa-minus"></i>
+                            <div class="input-group input-group-sm" style="width: 100px;">
+                                <button class="btn btn-sm btn-outline-secondary decrease-qty" style="padding: 0.25rem 0.4rem;" type="button" data-product-id="${item.product_id}">
+                                    <i class="fas fa-minus fa-xs"></i>
                                 </button>
-                                <input type="number" class="form-control text-center quantity-input" 
+                                <input type="number" class="form-control form-control-sm text-center" 
                                     value="${item.quantity}" min="1" max="${item.stock}"
                                     data-product-id="${item.product_id}">
-                                <button class="btn btn-outline-secondary increase-qty" type="button" data-product-id="${item.product_id}">
-                                    <i class="fas fa-plus"></i>
+                                <button class="btn btn-sm btn-outline-secondary increase-qty" style="padding: 0.25rem 0.4rem;" type="button" data-product-id="${item.product_id}">
+                                    <i class="fas fa-plus fa-xs"></i>
                                 </button>
+                            </div>
                             </div>
                         </td>
                         <td>$${(Number(item.price) * item.quantity).toFixed(2)}</td>
@@ -711,7 +718,7 @@
             });
 
             // Add event listeners for quantity buttons and input
-            $('.decrease-qty').off('click').on('click', function() {
+            $('.decrease-qty').off('click').on('click', function () {
                 const productId = $(this).data('product-id');
                 const item = saleItems.find(item => item.product_id === productId);
                 if (item) {
@@ -719,7 +726,7 @@
                 }
             });
 
-            $('.increase-qty').off('click').on('click', function() {
+            $('.increase-qty').off('click').on('click', function () {
                 const productId = $(this).data('product-id');
                 const item = saleItems.find(item => item.product_id === productId);
                 if (item) {
@@ -727,12 +734,12 @@
                 }
             });
 
-            $('.quantity-input').off('change').on('change', function() {
+            $('.quantity-input').off('change').on('change', function () {
                 const productId = $(this).data('product-id');
                 updateQuantity(productId, $(this).val());
             });
 
-            $('.delete-item').off('click').on('click', function() {
+            $('.delete-item').off('click').on('click', function () {
                 const productId = $(this).data('product-id');
                 removeItem(productId);
             });
@@ -747,7 +754,7 @@
                 quantity = parseInt(quantity);
                 if (isNaN(quantity) || quantity < 1) quantity = 1;
                 if (quantity > item.stock) quantity = item.stock;
-                
+
                 item.quantity = quantity;
                 updateSaleItemsTable();
                 updateTotal();
@@ -763,23 +770,23 @@
         function updateTotal() {
             currentSubtotal = saleItems.reduce((sum, item) => sum + (Number(item.price) * item.quantity), 0);
             $('#subtotalAmount').text(`$${currentSubtotal.toFixed(2)}`);
-            
+
             updateMaxPointsAllowed();
-            
+
             let finalTotal = currentSubtotal;
             let loyaltyDiscount = 0;
-            
+
             if ($('#usePoints').is(':checked')) {
                 const pointsToUse = Number($('#pointsToUse').val());
                 loyaltyDiscount = Math.min(pointsToUse, currentSubtotal);
                 finalTotal = Math.max(0, currentSubtotal - loyaltyDiscount);
-                
+
                 $('#loyaltyDiscountRow').show();
                 $('#loyaltyDiscount').text(`-$${loyaltyDiscount.toFixed(2)}`);
             } else {
                 $('#loyaltyDiscountRow').hide();
             }
-            
+
             $('#totalAmount').text(`$${finalTotal.toFixed(2)}`);
         }
 
@@ -787,7 +794,7 @@
             const maxPoints = Math.min(customerLoyaltyPoints, Math.floor(currentSubtotal));
             $('#maxPointsAllowed').text(maxPoints);
             $('#pointsToUse').attr('max', maxPoints);
-            
+
             // Adjust points to use if it exceeds the new maximum
             const currentPointsToUse = Number($('#pointsToUse').val());
             if (currentPointsToUse > maxPoints) {
@@ -796,7 +803,7 @@
         }
 
         // Add event listeners for loyalty points
-        $('#usePoints').change(function() {
+        $('#usePoints').change(function () {
             const isChecked = $(this).is(':checked');
             $('#pointsToUseDiv').toggle(isChecked);
             if (isChecked) {
@@ -806,7 +813,7 @@
             updateTotal();
         });
 
-        $('#pointsToUse').on('input', function() {
+        $('#pointsToUse').on('input', function () {
             const value = Number($(this).val());
             const max = Number($(this).attr('max'));
             if (value > max) {

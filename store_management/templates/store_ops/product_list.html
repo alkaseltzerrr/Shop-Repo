@@ -148,12 +148,19 @@
     .form-control {
         border-radius: 8px;
         padding: 0.75rem;
-        border: 1px solid var(--bs-border-color);
+        border: 1px solid #ced4da;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        background-color: #fff;
     }
 
     .form-control:focus {
-        border-color: var(--bs-primary);
+        border-color: #4e73df;
         box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+        outline: 0;
+    }
+
+    .form-control:hover {
+        border-color: #4e73df;
     }
 </style>
 {% endblock %}
