@@ -4,6 +4,19 @@
 
 {% block title %}Login - Store Management System{% endblock %}
 
+{% block head %}
+<script>
+    // Immediately set theme before page loads to prevent flash
+    (function() {
+        const theme = localStorage.getItem('theme');
+        if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('theme-dark');
+            document.documentElement.style.backgroundColor = '#1a202c';  // Dark background color
+        }
+    })();
+</script>
+{% endblock %}
+
 {% block extra_css %}
 <style>
     .auth-container {
