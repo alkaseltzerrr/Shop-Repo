@@ -674,10 +674,16 @@ def supplier_list(request):
 def supplier_add(request):
     if request.method == 'POST':
         try:
+            contact_person = request.POST.get('contact_person')
+            # Check if contact person already exists
+            if Supplier.objects.filter(contact_person=contact_person).exists():
+                messages.error(request, f'A supplier with contact person "{contact_person}" already exists.')
+                return redirect('supplier_list')
+            
             supplier = Supplier.objects.create(
                 name=request.POST.get('name'),
                 description=request.POST.get('description'),
-                contact_person=request.POST.get('contact_person'),
+                contact_person=contact_person,
                 email=request.POST.get('email'),
                 phone=request.POST.get('phone'),
                 address=request.POST.get('address'),
