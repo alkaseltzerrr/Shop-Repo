@@ -858,20 +858,127 @@ def profile(request):
     return render(request, 'store_ops/profile.html', context)
 
 @login_required
-def update_profile_picture(request):
+def update_profile(request):
+    print("Update profile request received")
+    print(f"Method: {request.method}")
+    print(f"Headers: {request.headers}")
+    
+    if request.method != 'POST':
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Invalid request method'
+        }, status=405)
+
+    # Check if it's an AJAX request (using the modern way)
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+    if not is_ajax:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Invalid request type'
+        }, status=400)
+
     if not hasattr(request.user, 'employee'):
-        messages.error(request, 'Employee profile not found.')
-        return redirect('profile')
-    
-    if request.method == 'POST':
-        form = ProfileUpdateForm(request.POST, request.FILES, instance=request.user.employee)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Profile picture updated successfully!')
-        else:
-            messages.error(request, 'Failed to update profile picture. Please try again.')
-    
-    return redirect('profile')
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Employee profile not found'
+        }, status=404)
+
+    try:
+        print("Processing profile update")
+        employee = request.user.employee
+        user = request.user
+        data = request.POST
+        
+        print(f"Received data: {data}")
+
+        # Update user fields if provided and not empty
+        if data.get('username'):
+            print(f"Updating username to: {data['username']}")
+            user.username = data['username']
+        if data.get('email'):
+            print(f"Updating email to: {data['email']}")
+            user.email = data['email']
+        if data.get('password'):
+            print("Updating password")
+            user.set_password(data['password'])
+
+        # Update employee fields
+        if 'phone' in data:
+            print(f"Updating phone to: {data['phone']}")
+            employee.phone = data['phone']
+        if 'emergency_contact' in data:
+            print(f"Updating emergency contact to: {data['emergency_contact']}")
+            employee.emergency_contact = data['emergency_contact']
+        if 'address' in data:
+            print(f"Updating address to: {data['address']}")
+            employee.address = data['address']
+
+        # Handle profile picture upload
+        if 'profile_picture' in request.FILES:
+            print("Processing profile picture")
+            file = request.FILES['profile_picture']
+            
+            # Validate file size (5MB limit)
+            if file.size > 5 * 1024 * 1024:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Profile picture size should not exceed 5MB'
+                }, status=400)
+            
+            # Validate file type
+            allowed_types = ['image/jpeg', 'image/png', 'image/gif']
+            if file.content_type not in allowed_types:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Invalid file type. Please upload a JPEG, PNG, or GIF image.'
+                }, status=400)
+            
+            # Delete old profile picture if it exists
+            if employee.profile_picture:
+                try:
+                    employee.profile_picture.delete(save=False)
+                except Exception as e:
+                    print(f"Error deleting old profile picture: {str(e)}")
+            
+            employee.profile_picture = file
+
+        # Save changes
+        try:
+            print("Saving user changes")
+            user.save()
+            print("Saving employee changes")
+            employee.save()
+        except Exception as e:
+            print(f"Error saving profile: {str(e)}")
+            return JsonResponse({
+                'status': 'error',
+                'message': f'Error saving profile: {str(e)}'
+            }, status=500)
+
+        print("Profile update successful")
+        response_data = {
+            'status': 'success',
+            'message': 'Profile updated successfully',
+            'data': {
+                'username': user.username,
+                'email': user.email,
+                'phone': employee.phone or '',
+                'emergency_contact': employee.emergency_contact or '',
+                'address': employee.address or ''
+            }
+        }
+
+        if employee.profile_picture:
+            response_data['data']['profile_picture_url'] = employee.profile_picture.url
+
+        return JsonResponse(response_data)
+
+    except Exception as e:
+        print(f"Error in update_profile: {str(e)}")
+        return JsonResponse({
+            'status': 'error',
+            'message': f'An error occurred: {str(e)}'
+        }, status=500)
 
 @login_required
 def save_preferences(request):
@@ -982,3 +1089,45 @@ def cancel_purchase(request, pk):
         except Purchase.DoesNotExist:
             messages.error(request, 'Purchase order not found')
     return redirect('purchase_orders')
+
+@login_required
+def verify_current_password(request):
+    if request.method != 'POST':
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Invalid request method'
+        }, status=405)
+
+    try:
+        data = json.loads(request.body)
+        current_password = data.get('current_password')
+
+        if not current_password:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Current password is required'
+            }, status=400)
+
+        # Check if the current password is correct
+        if request.user.check_password(current_password):
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Password verified successfully'
+            })
+        else:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Invalid password'
+            }, status=400)
+
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Invalid JSON data'
+        }, status=400)
+    except Exception as e:
+        print(f"Error verifying password: {str(e)}")
+        return JsonResponse({
+            'status': 'error',
+            'message': 'An error occurred while verifying password'
+        }, status=500)

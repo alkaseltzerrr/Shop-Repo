@@ -41,6 +41,72 @@
         color: #4e73df;
     }
 
+    /* Password field styles */
+    #passwordField {
+        background-color: var(--bg-color);
+        border: 1px solid var(--border-color);
+        color: var(--text-color);
+        font-family: monospace;
+        letter-spacing: 2px;
+    }
+
+    #passwordField:read-only {
+        cursor: default;
+    }
+
+    #togglePassword {
+        border-color: var(--border-color);
+        color: var(--text-color);
+    }
+
+    #togglePassword:hover {
+        background-color: rgba(78, 115, 223, 0.1);
+    }
+
+    /* Edit mode styles */
+    .edit-controls {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: flex-end;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .edit-controls .btn {
+        min-width: 100px;
+    }
+
+    .info-item .form-control {
+        background-color: var(--bg-color);
+        border: 1px solid var(--border-color);
+        color: var(--text-color);
+    }
+
+    .info-item .form-control:focus {
+        background-color: var(--bg-color);
+        border-color: #4e73df;
+        box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+        color: var(--text-color);
+    }
+
+    .info-item .form-control:read-only {
+        background-color: var(--bg-color);
+        cursor: default;
+    }
+
+    .info-item .invalid-feedback {
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+
+    .info-item.is-invalid .form-control {
+        border-color: #e74a3b;
+    }
+
+    .info-item.is-invalid .invalid-feedback {
+        display: block;
+    }
+
     /* User Information Styles */
     .user-info {
         display: flex;
@@ -207,357 +273,830 @@
     input:checked + .switch-slider:before {
         transform: translateX(26px);
     }
+
+    /* Add styles for employee status toggle */
+    .status-toggle {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 34px;
+    }
+
+    .status-toggle input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .status-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: .4s;
+        border-radius: 34px;
+    }
+
+    .status-slider:before {
+        position: absolute;
+        content: "";
+        height: 26px;
+        width: 26px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+    }
+
+    input:checked + .status-slider {
+        background-color: #2196F3;
+    }
+
+    input:checked + .status-slider:before {
+        transform: translateX(26px);
+    }
+
+    .status-text {
+        font-size: 1.1rem;
+        font-weight: 500;
+        margin-left: 1rem;
+    }
+
+    .status-message {
+        margin-top: 1rem;
+        padding: 0.5rem;
+        border-radius: 5px;
+        display: none;
+    }
+
+    .status-message.success {
+        display: block;
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="profile-container">
-    <!-- Profile Header -->
-    <div class="profile-header">
-        <div class="row align-items-center">
-            <div class="col-auto">
-                <div class="profile-picture-container text-center mb-4">
-                    {% if profile_picture_url %}
-                        <img src="{{ profile_picture_url }}" alt="Profile Picture" class="profile-picture rounded-circle" style="width: 150px; height: 150px; object-fit: cover;">
-                    {% else %}
-                        <img src="{% static 'images/default-profile.png' %}" alt="Default Profile Picture" class="profile-picture rounded-circle" style="width: 150px; height: 150px; object-fit: cover;">
-                    {% endif %}
+<div class="container mt-5">
+    <!-- Password Verification Modal -->
+    <div class="modal fade" id="passwordVerificationModal" tabindex="-1" aria-labelledby="passwordVerificationModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="passwordVerificationModalLabel">Verify Password</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-            </div>
-            <div class="col">
-                <h2 class="mb-2">{{ user.get_full_name }}</h2>
-                <p class="mb-0">{{ user.employee.role }}</p>
-                <p class="mb-0">{{ user.email }}</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- User Information Section -->
-    <div class="row mb-4">
-        <div class="col-md-6">
-            <div class="preference-group">
-                <h5><i class="fas fa-user-circle me-2"></i>Account Information</h5>
-                <div class="user-info">
-                    <div class="info-item">
-                        <i class="fas fa-user me-2"></i>
-                        <div>
-                            <strong>Username</strong>
-                            <p class="mb-0">{{ user.username }}</p>
-                        </div>
-                    </div>
-                    <div class="info-item">
-                        <i class="fas fa-envelope me-2"></i>
-                        <div>
-                            <strong>Email</strong>
-                            <p class="mb-0">{{ user.email }}</p>
-                        </div>
-                    </div>
-                    <div class="info-item">
-                        <i class="fas fa-clock me-2"></i>
-                        <div>
-                            <strong>Last Login</strong>
-                            <p class="mb-0">{{ user.last_login|date:"F d, Y H:i" }}</p>
-                        </div>
-                    </div>
-                    <div class="info-item">
-                        <i class="fas fa-calendar-check me-2"></i>
-                        <div>
-                            <strong>Account Created</strong>
-                            <p class="mb-0">{{ user.date_joined|date:"F d, Y" }}</p>
-                        </div>
-                    </div>
-                    <div class="info-item">
-                        <i class="fas fa-shield-alt me-2"></i>
-                        <div>
-                            <strong>Account Status</strong>
-                            <p class="mb-0">
-                                {% if user.is_active %}
-                                    <span class="badge bg-success">Active</span>
-                                {% else %}
-                                    <span class="badge bg-danger">Inactive</span>
-                                {% endif %}
-                            </p>
-                        </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="currentPasswordInput" class="form-label">Enter your current password</label>
+                        <input type="password" class="form-control" id="currentPasswordInput">
+                        <div class="invalid-feedback">Invalid password</div>
                     </div>
                 </div>
-            </div>
-        </div>
-
-        {% if employee %}
-        <div class="col-md-6">
-            <div class="preference-group">
-                <h5><i class="fas fa-id-card me-2"></i>Employee Information</h5>
-                <div class="user-info">
-                    <div class="info-item">
-                        <i class="fas fa-user-tie me-2"></i>
-                        <div>
-                            <strong>Full Name</strong>
-                            <p class="mb-0">{{ employee.user.get_full_name }}</p>
-                        </div>
-                    </div>
-                    <div class="info-item">
-                        <i class="fas fa-briefcase me-2"></i>
-                        <div>
-                            <strong>Role</strong>
-                            <p class="mb-0">{{ employee.get_role_display }}</p>
-                        </div>
-                    </div>
-                    <div class="info-item">
-                        <i class="fas fa-phone me-2"></i>
-                        <div>
-                            <strong>Phone</strong>
-                            <p class="mb-0">{{ employee.phone }}</p>
-                        </div>
-                    </div>
-                    <div class="info-item">
-                        <i class="fas fa-dollar-sign me-2"></i>
-                        <div>
-                            <strong>Salary</strong>
-                            <p class="mb-0">${{ employee.salary|floatformat:2 }}</p>
-                        </div>
-                    </div>
-                    <div class="info-item">
-                        <i class="fas fa-toggle-on me-2"></i>
-                        <div>
-                            <strong>Employee Status</strong>
-                            <p class="mb-0">
-                                {% if employee.is_active %}
-                                    <span class="badge bg-success">Active</span>
-                                {% else %}
-                                    <span class="badge bg-danger">Inactive</span>
-                                {% endif %}
-                            </p>
-                        </div>
-                    </div>
-                    <div class="info-item">
-                        <i class="fas fa-calendar-alt me-2"></i>
-                        <div>
-                            <strong>Hire Date</strong>
-                            <p class="mb-0">{{ employee.hire_date|date:"F d, Y" }}</p>
-                        </div>
-                    </div>
-                    {% if employee.date_of_birth %}
-                    <div class="info-item">
-                        <i class="fas fa-birthday-cake me-2"></i>
-                        <div>
-                            <strong>Date of Birth</strong>
-                            <p class="mb-0">{{ employee.date_of_birth|date:"F d, Y" }}</p>
-                        </div>
-                    </div>
-                    {% endif %}
-                    {% if employee.emergency_contact %}
-                    <div class="info-item">
-                        <i class="fas fa-ambulance me-2"></i>
-                        <div>
-                            <strong>Emergency Contact</strong>
-                            <p class="mb-0">{{ employee.emergency_contact }}</p>
-                        </div>
-                    </div>
-                    {% endif %}
-                    <div class="info-item">
-                        <i class="fas fa-map-marker-alt me-2"></i>
-                        <div>
-                            <strong>Address</strong>
-                            <p class="mb-0">{{ employee.address }}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        {% endif %}
-    </div>
-
-    <!-- Stats Section -->
-    <div class="stats-container">
-        <div class="stat-card">
-            <div class="stat-icon">
-                <i class="fas fa-shopping-cart"></i>
-            </div>
-            <h3 class="mb-2">{{ total_sales|default:0 }}</h3>
-            <p class="text-muted mb-0">Total Sales</p>
-        </div>
-        <div class="stat-card">
-            <div class="stat-icon">
-                <i class="fas fa-dollar-sign"></i>
-            </div>
-            <h3 class="mb-2">${{ total_revenue|default:'0.00' }}</h3>
-            <p class="text-muted mb-0">Revenue Generated</p>
-        </div>
-        <div class="stat-card">
-            <div class="stat-icon">
-                <i class="fas fa-clock"></i>
-            </div>
-            <h3 class="mb-2">{{ days_employed }}</h3>
-            <p class="text-muted mb-0">Days with Company</p>
-        </div>
-    </div>
-
-    <!-- Preferences Section -->
-    <div class="row">
-        <div class="col-md-6">
-            <!-- Theme Preferences -->
-            <div class="preference-group">
-                <h5><i class="fas fa-palette me-2"></i>Theme Preferences</h5>
-                <div class="d-flex flex-wrap">
-                    <button class="preference-button theme-btn {% if preferences.theme == 'light' %}active{% endif %}" data-theme="light">
-                        <i class="fas fa-sun"></i>Light
-                    </button>
-                    <button class="preference-button theme-btn {% if preferences.theme == 'dark' %}active{% endif %}" data-theme="dark">
-                        <i class="fas fa-moon"></i>Dark
-                    </button>
-                    <button class="preference-button theme-btn {% if preferences.theme == 'auto' %}active{% endif %}" data-theme="auto">
-                        <i class="fas fa-magic"></i>Auto
-                    </button>
-                </div>
-            </div>
-
-            <!-- Time Format -->
-            <div class="preference-group">
-                <h5><i class="fas fa-clock me-2"></i>Time Format</h5>
-                <div class="d-flex flex-wrap">
-                    <button class="preference-button time-btn {% if preferences.time_format == '24' %}active{% endif %}" data-time="24">
-                        <i class="fas fa-clock"></i>24-Hour
-                    </button>
-                    <button class="preference-button time-btn {% if preferences.time_format == '12' %}active{% endif %}" data-time="12">
-                        <i class="far fa-clock"></i>12-Hour
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-6">
-            <!-- Date Format -->
-            <div class="preference-group">
-                <h5><i class="fas fa-calendar me-2"></i>Date Format</h5>
-                <div class="d-flex flex-wrap">
-                    <button class="preference-button date-btn {% if preferences.date_format == 'mdy' %}active{% endif %}" data-date="mdy">
-                        <i class="fas fa-calendar-alt"></i>MM/DD/YYYY
-                    </button>
-                    <button class="preference-button date-btn {% if preferences.date_format == 'dmy' %}active{% endif %}" data-date="dmy">
-                        <i class="fas fa-calendar-alt"></i>DD/MM/YYYY
-                    </button>
-                    <button class="preference-button date-btn {% if preferences.date_format == 'ymd' %}active{% endif %}" data-date="ymd">
-                        <i class="fas fa-calendar-alt"></i>YYYY/MM/DD
-                    </button>
-                </div>
-            </div>
-
-            <!-- Notifications -->
-            <div class="preference-group">
-                <h5><i class="fas fa-bell me-2"></i>Notifications</h5>
-                <div class="d-flex align-items-center">
-                    <label class="notification-switch me-3">
-                        <input type="checkbox" id="emailNotifications" {% if preferences.email_notifications %}checked{% endif %}>
-                        <span class="switch-slider"></span>
-                    </label>
-                    <span>Email Notifications</span>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="verifyPasswordBtn">Verify</button>
                 </div>
             </div>
         </div>
     </div>
-
-    <!-- Recent Activity -->
-    <div class="preference-group mt-4">
-        <h5><i class="fas fa-history me-2"></i>Recent Activity</h5>
-        <div class="activity-timeline">
-            {% for activity in recent_activities|slice:":5" %}
-            <div class="timeline-item">
-                <p class="mb-0"><strong>{{ activity.date|date:"F d, Y H:i" }}</strong></p>
-                <p class="text-muted mb-0">{{ activity.description }}</p>
+    
+    <div class="profile-container">
+        <!-- Profile Header -->
+        <div class="profile-header">
+            <div class="row align-items-center">
+                <div class="col-auto">
+                    <div class="profile-picture-container text-center mb-4">
+                        <div class="position-relative d-inline-block">
+                            {% if profile_picture_url %}
+                                <img src="{{ profile_picture_url }}" alt="Profile Picture" class="profile-picture rounded-circle" style="width: 150px; height: 150px; object-fit: cover;" id="profilePicture">
+                            {% else %}
+                                <img src="{% static 'images/default-profile.png' %}" alt="Default Profile Picture" class="profile-picture rounded-circle" style="width: 150px; height: 150px; object-fit: cover;" id="profilePicture">
+                            {% endif %}
+                            <div class="position-absolute bottom-0 end-0">
+                                <label for="profilePictureInput" class="btn btn-primary btn-sm rounded-circle" style="width: 32px; height: 32px; padding: 0; line-height: 32px;">
+                                    <i class="fas fa-camera"></i>
+                                </label>
+                                <input type="file" id="profilePictureInput" name="profile_picture" accept="image/*" style="display: none;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col">
+                    <h2 class="mb-2">{{ user.get_full_name }}</h2>
+                    <p class="mb-0">{{ user.employee.role }}</p>
+                    <p class="mb-0">{{ user.email }}</p>
+                </div>
             </div>
-            {% empty %}
-            <p class="text-muted">No recent activity to display.</p>
-            {% endfor %}
+        </div>
+
+        <!-- User Information Section -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="preference-group">
+                    <h5><i class="fas fa-user-circle me-2"></i>Account Information</h5>
+                    <div class="user-info">
+                        <form id="accountInfoForm">
+                            {% csrf_token %}
+                            <div class="info-item mb-3">
+                                <i class="fas fa-user me-2"></i>
+                                <div class="w-100">
+                                    <label for="usernameField" class="form-label">Username</label>
+                                    <input type="text" class="form-control" id="usernameField" name="username" value="{{ user.username }}" readonly>
+                                    <div class="invalid-feedback" id="usernameError"></div>
+                                </div>
+                            </div>
+
+                            <div class="info-item mb-3">
+                                <i class="fas fa-envelope me-2"></i>
+                                <div class="w-100">
+                                    <label for="emailField" class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="emailField" name="email" value="{{ user.email }}" readonly>
+                                    <div class="invalid-feedback" id="emailError"></div>
+                                </div>
+                            </div>
+
+                            <div class="info-item mb-3">
+                                <i class="fas fa-key me-2"></i>
+                                <div class="w-100">
+                                    <label for="passwordField" class="form-label">Password</label>
+                                    <div class="input-group">
+                                        <input type="password" class="form-control" id="passwordField" name="password" value="••••••••" readonly>
+                                        <button class="btn btn-outline-secondary" type="button" id="togglePassword" disabled>
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                    <div class="invalid-feedback" id="passwordError"></div>
+                                </div>
+                            </div>
+
+                            {% if employee %}
+                            <div class="info-item mb-3">
+                                <i class="fas fa-phone me-2"></i>
+                                <div class="w-100">
+                                    <label for="phoneField" class="form-label">Phone</label>
+                                    <input type="tel" class="form-control" id="phoneField" name="phone" value="{{ employee.phone }}" readonly>
+                                    <div class="invalid-feedback" id="phoneError"></div>
+                                </div>
+                            </div>
+
+                            <div class="info-item mb-3">
+                                <i class="fas fa-ambulance me-2"></i>
+                                <div class="w-100">
+                                    <label for="emergencyContactField" class="form-label">Emergency Contact</label>
+                                    <input type="text" class="form-control" id="emergencyContactField" name="emergency_contact" value="{{ employee.emergency_contact }}" readonly>
+                                    <div class="invalid-feedback" id="emergencyContactError"></div>
+                                </div>
+                            </div>
+
+                            <div class="info-item mb-3">
+                                <i class="fas fa-map-marker-alt me-2"></i>
+                                <div class="w-100">
+                                    <label for="addressField" class="form-label">Address</label>
+                                    <textarea class="form-control" id="addressField" name="address" rows="2" readonly>{{ employee.address }}</textarea>
+                                    <div class="invalid-feedback" id="addressError"></div>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <div class="text-end mt-3">
+                                <button type="button" class="btn btn-primary" id="editProfileBtn">
+                                    <i class="fas fa-edit me-1"></i>Edit
+                                </button>
+                                <button type="submit" class="btn btn-success d-none" id="saveProfileBtn" disabled>
+                                    <i class="fas fa-save me-1"></i>Save Changes
+                                </button>
+                                <button type="button" class="btn btn-secondary d-none" id="cancelProfileBtn">
+                                    <i class="fas fa-times me-1"></i>Cancel
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            {% if employee %}
+            <div class="col-md-6">
+                <div class="preference-group">
+                    <h5><i class="fas fa-id-card me-2"></i>Employee Information</h5>
+                    <div class="user-info">
+                        <div class="info-item">
+                            <i class="fas fa-user-tie me-2"></i>
+                            <div>
+                                <strong>Full Name</strong>
+                                <p class="mb-0">{{ employee.user.get_full_name }}</p>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-briefcase me-2"></i>
+                            <div>
+                                <strong>Role</strong>
+                                <p class="mb-0">{{ employee.get_role_display }}</p>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-dollar-sign me-2"></i>
+                            <div>
+                                <strong>Salary</strong>
+                                <p class="mb-0">${{ employee.salary|floatformat:2 }}</p>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-toggle-on me-2"></i>
+                            <div>
+                                <strong>Employee Status</strong>
+                                <p class="mb-0" id="employeeStatusBadge">
+                                    {% if employee.is_active %}
+                                        <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Inactive</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-calendar-alt me-2"></i>
+                            <div>
+                                <strong>Hire Date</strong>
+                                <p class="mb-0">{{ employee.hire_date|date:"F d, Y" }}</p>
+                            </div>
+                        </div>
+                        {% if employee.date_of_birth %}
+                        <div class="info-item">
+                            <i class="fas fa-birthday-cake me-2"></i>
+                            <div>
+                                <strong>Date of Birth</strong>
+                                <p class="mb-0">{{ employee.date_of_birth|date:"F d, Y" }}</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                        <div class="info-item">
+                            <i class="fas fa-clock me-2"></i>
+                            <div>
+                                <strong>Last Login</strong>
+                                <p class="mb-0">{{ user.last_login|date:"F d, Y H:i" }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Stats Section -->
+        <div class="stats-container">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-shopping-cart"></i>
+                </div>
+                <h3 class="mb-2">{{ total_sales|default:0 }}</h3>
+                <p class="text-muted mb-0">Total Sales</p>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-dollar-sign"></i>
+                </div>
+                <h3 class="mb-2">${{ total_revenue|default:'0.00' }}</h3>
+                <p class="text-muted mb-0">Revenue Generated</p>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <h3 class="mb-2">{{ days_employed }}</h3>
+                <p class="text-muted mb-0">Days with Company</p>
+            </div>
+        </div>
+
+        <!-- Preferences Section -->
+        <div class="row">
+            <div class="col-md-6">
+                <!-- Theme Preferences -->
+                <div class="preference-group">
+                    <h5><i class="fas fa-palette me-2"></i>Theme Preferences</h5>
+                    <div class="d-flex flex-wrap">
+                        <button class="preference-button theme-btn {% if preferences.theme == 'light' %}active{% endif %}" data-theme="light">
+                            <i class="fas fa-sun"></i>Light
+                        </button>
+                        <button class="preference-button theme-btn {% if preferences.theme == 'dark' %}active{% endif %}" data-theme="dark">
+                            <i class="fas fa-moon"></i>Dark
+                        </button>
+                        <button class="preference-button theme-btn {% if preferences.theme == 'auto' %}active{% endif %}" data-theme="auto">
+                            <i class="fas fa-magic"></i>Auto
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <!-- Employee Status -->
+                <div class="preference-group">
+                    <h5><i class="fas fa-user-check me-2"></i>Employee Status</h5>
+                    <div class="status-container mt-3">
+                        <div class="d-flex align-items-center">
+                            <label class="status-toggle">
+                                <input type="checkbox" id="employeeStatusToggle">
+                                <span class="status-slider"></span>
+                            </label>
+                            <span class="status-text" id="statusText">Inactive</span>
+                        </div>
+                        <div class="status-message" id="statusMessage"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="preference-group mt-4">
+            <h5><i class="fas fa-history me-2"></i>Recent Activity</h5>
+            <div class="activity-timeline">
+                {% for activity in recent_activities|slice:":5" %}
+                <div class="timeline-item">
+                    <p class="mb-0"><strong>{{ activity.date|date:"F d, Y H:i" }}</strong></p>
+                    <p class="text-muted mb-0">{{ activity.description }}</p>
+                </div>
+                {% empty %}
+                <p class="text-muted">No recent activity to display.</p>
+                {% endfor %}
+            </div>
         </div>
     </div>
-</div>
 
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Theme buttons
-    document.querySelectorAll('.theme-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-            const theme = this.dataset.theme;
-            setTheme(theme);  // Use the global setTheme function
-            savePreference('theme', theme);
-        });
-    });
-
-    // Time format buttons
-    document.querySelectorAll('.time-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-            savePreference('time_format', this.dataset.time);
-        });
-    });
-
-    // Date format buttons
-    document.querySelectorAll('.date-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            document.querySelectorAll('.date-btn').forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-            savePreference('date_format', this.dataset.date);
-        });
-    });
-
-    // Notification toggle
-    document.getElementById('emailNotifications').addEventListener('change', function() {
-        savePreference('email_notifications', this.checked ? 'on' : 'off');
-    });
-
-    function savePreference(key, value) {
-        const formData = new FormData();
-        formData.append(key, value);
-        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
-
-        fetch('{% url "save_preferences" %}', {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-CSRFToken': '{{ csrf_token }}'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success' && window.location.pathname === '{% url "profile" %}') {
-                // Show alert in the lower right corner
-                const toast = document.createElement('div');
-                const isDarkMode = document.body.classList.contains('theme-dark');
-                
-                toast.className = `alert ${isDarkMode ? 'bg-dark text-light' : 'alert-success'} position-fixed bottom-0 end-0 m-3`;
-                toast.style.zIndex = '1050';
-                if (isDarkMode) {
-                    toast.style.border = '1px solid #373b47';
-                }
-                toast.innerHTML = 'Theme preferences updated!';
-                document.body.appendChild(toast);
-                setTimeout(() => toast.remove(), 3000);
-            }
-        })
-        .catch(error => console.error('Error:', error));
-    }
-
-    function applyTheme(theme) {
-        const body = document.body;
-        body.classList.remove('theme-light', 'theme-dark');
+    const accountInfoForm = document.getElementById('accountInfoForm');
+    const editProfileBtn = document.getElementById('editProfileBtn');
+    const saveProfileBtn = document.getElementById('saveProfileBtn');
+    const cancelProfileBtn = document.getElementById('cancelProfileBtn');
+    const profilePictureInput = document.getElementById('profilePictureInput');
+    const profilePicture = document.getElementById('profilePicture');
+    const passwordField = document.getElementById('passwordField');
+    const togglePasswordBtn = document.getElementById('togglePassword');
+    const passwordVerificationModal = new bootstrap.Modal(document.getElementById('passwordVerificationModal'));
+    const currentPasswordInput = document.getElementById('currentPasswordInput');
+    const verifyPasswordBtn = document.getElementById('verifyPasswordBtn');
+    const themeButtons = document.querySelectorAll('.theme-btn');
+    const employeeStatusToggle = document.getElementById('employeeStatusToggle');
+    const statusText = document.getElementById('statusText');
+    const statusMessage = document.getElementById('statusMessage');
+    const employeeStatusBadge = document.getElementById('employeeStatusBadge');
+    
+    let formChanged = false;
+    let newProfilePicture = null;
+    let passwordVisible = false;
+    let passwordVerified = false;
+    
+    // Store initial form values
+    const initialFormValues = {
+        username: document.getElementById('usernameField').value,
+        email: document.getElementById('emailField').value,
+        phone: document.getElementById('phoneField')?.value || '',
+        emergency_contact: document.getElementById('emergencyContactField')?.value || '',
+        address: document.getElementById('addressField')?.value || '',
+        password: passwordField.value
+    };
+    
+    // Get all form inputs
+    const formInputs = accountInfoForm.querySelectorAll('input, textarea');
+    
+    // Handle password verification
+    verifyPasswordBtn.addEventListener('click', async function() {
+        const currentPassword = currentPasswordInput.value;
         
-        if (theme === 'auto') {
-            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                body.classList.add('theme-dark');
+        try {
+            const response = await fetch('/verify-password/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ current_password: currentPassword })
+            });
+            
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                passwordVerified = true;
+                passwordVerificationModal.hide();
+                currentPasswordInput.value = '';
+                currentPasswordInput.classList.remove('is-invalid');
+                
+                // Show password after verification
+                passwordField.type = 'text';
+                togglePasswordBtn.querySelector('i').classList.remove('fa-eye');
+                togglePasswordBtn.querySelector('i').classList.add('fa-eye-slash');
+                passwordVisible = true;
+                
+                // Make password field editable if in edit mode
+                if (!saveProfileBtn.classList.contains('d-none')) {
+                    passwordField.readOnly = false;
+                    if (passwordField.value === '••••••••') {
+                        passwordField.value = '';
+                        passwordField.placeholder = 'Enter new password';
+                    }
+                }
             } else {
-                body.classList.add('theme-light');
+                currentPasswordInput.classList.add('is-invalid');
+                showToast(data.message || 'Invalid password', 'error');
+            }
+        } catch (error) {
+            console.error('Error verifying password:', error);
+            showToast('An error occurred while verifying password', 'error');
+        }
+    });
+    
+    // Handle modal hidden event
+    document.getElementById('passwordVerificationModal').addEventListener('hidden.bs.modal', function () {
+        currentPasswordInput.value = '';
+        currentPasswordInput.classList.remove('is-invalid');
+    });
+    
+    // Handle edit button click
+    editProfileBtn.addEventListener('click', function() {
+        // Enable all form inputs except password
+        formInputs.forEach(input => {
+            if (input.id !== 'passwordField') {
+                input.readOnly = false;
+            }
+        });
+        
+        // Show save and cancel buttons, hide edit button
+        editProfileBtn.classList.add('d-none');
+        saveProfileBtn.classList.remove('d-none');
+        cancelProfileBtn.classList.remove('d-none');
+        
+        // Enable password toggle button
+        togglePasswordBtn.disabled = false;
+        
+        // Reset password field
+        passwordField.value = '';
+        passwordField.placeholder = 'Enter new password';
+        passwordField.type = 'password';
+        togglePasswordBtn.querySelector('i').classList.remove('fa-eye-slash');
+        togglePasswordBtn.querySelector('i').classList.add('fa-eye');
+        passwordVisible = false;
+        passwordVerified = false;
+    });
+    
+    // Handle toggle password visibility
+    togglePasswordBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (this.disabled) return;
+        
+        if (!passwordVisible) {
+            if (!passwordVerified) {
+                passwordVerificationModal.show();
+                return;
+            }
+            
+            // Show password
+            passwordField.type = 'text';
+            this.querySelector('i').classList.remove('fa-eye');
+            this.querySelector('i').classList.add('fa-eye-slash');
+            passwordVisible = true;
+            
+            // Make password field editable if in edit mode
+            if (!saveProfileBtn.classList.contains('d-none')) {
+                passwordField.readOnly = false;
+                if (passwordField.value === '••••••••') {
+                    passwordField.value = '';
+                    passwordField.placeholder = 'Enter new password';
+                }
             }
         } else {
-            body.classList.add(`theme-${theme}`);
+            // Hide password
+            passwordField.type = 'password';
+            this.querySelector('i').classList.remove('fa-eye-slash');
+            this.querySelector('i').classList.add('fa-eye');
+            passwordVisible = false;
+        }
+    });
+    
+    // Handle cancel button click
+    cancelProfileBtn.addEventListener('click', function() {
+        // Reset form to initial values
+        Object.keys(initialFormValues).forEach(key => {
+            const field = document.getElementById(key + 'Field');
+            if (field) {
+                field.value = initialFormValues[key];
+                field.readOnly = true;
+            }
+        });
+        
+        // Hide save and cancel buttons, show edit button
+        editProfileBtn.classList.remove('d-none');
+        saveProfileBtn.classList.add('d-none');
+        cancelProfileBtn.classList.add('d-none');
+        
+        // Reset password field
+        passwordField.type = 'password';
+        passwordField.value = '••••••••';
+        passwordField.readOnly = true;
+        togglePasswordBtn.disabled = true;
+        togglePasswordBtn.querySelector('i').classList.remove('fa-eye-slash');
+        togglePasswordBtn.querySelector('i').classList.add('fa-eye');
+        passwordVisible = false;
+        passwordVerified = false;
+        
+        // Reset form state
+        formChanged = false;
+        saveProfileBtn.disabled = true;
+    });
+    
+    // Handle form input changes
+    accountInfoForm.addEventListener('input', function(e) {
+        if (!e.target.readOnly) {
+            formChanged = true;
+            saveProfileBtn.disabled = false;
+        }
+    });
+    
+    // Handle profile picture selection
+    profilePictureInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            if (file.size > 5 * 1024 * 1024) { // 5MB limit
+                showToast('Image size should not exceed 5MB', 'error');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                profilePicture.src = e.target.result;
+                newProfilePicture = file;
+                formChanged = true;
+                saveProfileBtn.disabled = false;
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+    
+    // Handle form submission
+    accountInfoForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        if (!formChanged) {
+            return;
+        }
+        
+        try {
+            saveProfileBtn.disabled = true;
+            
+            // Create FormData from the form
+            const formData = new FormData();
+            
+            // Add form fields manually to ensure proper data
+            const username = document.getElementById('usernameField').value;
+            const email = document.getElementById('emailField').value;
+            const password = document.getElementById('passwordField').value;
+            const phone = document.getElementById('phoneField')?.value || '';
+            const emergencyContact = document.getElementById('emergencyContactField')?.value || '';
+            const address = document.getElementById('addressField')?.value || '';
+            
+            // Only add non-empty values
+            if (username) formData.append('username', username);
+            if (email) formData.append('email', email);
+            if (password && password !== '••••••••') formData.append('password', password);
+            if (phone) formData.append('phone', phone);
+            if (emergencyContact) formData.append('emergency_contact', emergencyContact);
+            if (address) formData.append('address', address);
+            
+            // Add profile picture if selected
+            if (newProfilePicture) {
+                formData.append('profile_picture', newProfilePicture);
+            }
+            
+            // Add CSRF token
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            
+            const response = await fetch('/profile/update/', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin'
+            });
+            
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error('Server returned non-JSON response');
+            }
+            
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                showToast(data.message, 'success');
+                
+                // Update form with returned data
+                if (data.data) {
+                    Object.keys(data.data).forEach(key => {
+                        const field = document.getElementById(key + 'Field');
+                        if (field && key !== 'password') {
+                            field.value = data.data[key];
+                            initialFormValues[key] = data.data[key];
+                        }
+                    });
+                    
+                    if (data.data.profile_picture_url) {
+                        profilePicture.src = data.data.profile_picture_url;
+                    }
+                }
+                
+                // Reset form to view mode
+                formInputs.forEach(input => {
+                    input.readOnly = true;
+                });
+                
+                // Reset password field
+                passwordField.type = 'password';
+                passwordField.value = '••••••••';
+                togglePasswordBtn.disabled = true;
+                togglePasswordBtn.querySelector('i').classList.remove('fa-eye-slash');
+                togglePasswordBtn.querySelector('i').classList.add('fa-eye');
+                
+                // Show edit button, hide save and cancel buttons
+                editProfileBtn.classList.remove('d-none');
+                saveProfileBtn.classList.add('d-none');
+                cancelProfileBtn.classList.add('d-none');
+                
+                formChanged = false;
+            } else {
+                showToast(data.message || 'Failed to update profile', 'error');
+            }
+        } catch (error) {
+            console.error('Error updating profile:', error);
+            showToast(error.message || 'An error occurred while updating profile', 'error');
+        } finally {
+            saveProfileBtn.disabled = false;
+        }
+    });
+    
+    // Function to apply theme
+    function applyTheme(theme) {
+        // Apply theme to HTML element
+        document.documentElement.setAttribute('data-bs-theme', theme);
+        // Apply theme to body
+        document.body.setAttribute('data-bs-theme', theme);
+        // Apply theme class directly
+        document.body.classList.remove('theme-light', 'theme-dark', 'theme-auto');
+        document.body.classList.add('theme-' + theme);
+        
+        // Update all theme-sensitive elements
+        const elements = document.querySelectorAll('[data-bs-theme]');
+        elements.forEach(element => {
+            element.setAttribute('data-bs-theme', theme);
+        });
+        
+        // Update buttons active state
+        themeButtons.forEach(btn => {
+            if (btn.dataset.theme === theme) {
+                btn.classList.add('active');
+                btn.setAttribute('aria-pressed', 'true');
+            } else {
+                btn.classList.remove('active');
+                btn.setAttribute('aria-pressed', 'false');
+            }
+        });
+
+        // Update theme-specific styles
+        if (theme === 'dark') {
+            document.body.style.backgroundColor = '#212529';
+            document.body.style.color = '#f8f9fa';
+        } else {
+            document.body.style.backgroundColor = '#ffffff';
+            document.body.style.color = '#212529';
+        }
+
+        // Force Bootstrap to refresh its theme
+        const event = new Event('themeChanged');
+        document.dispatchEvent(event);
+    }
+
+    // Add CSS for theme transitions
+    const styleSheet = document.createElement('style');
+    styleSheet.textContent = `
+        body {
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .theme-dark {
+            background-color: #212529 !important;
+            color: #f8f9fa !important;
+        }
+        .theme-light {
+            background-color: #ffffff !important;
+            color: #212529 !important;
+        }
+    `;
+    document.head.appendChild(styleSheet);
+
+    // Theme preference buttons
+    themeButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const theme = this.dataset.theme;
+            applyTheme(theme);
+            localStorage.setItem('theme', theme);
+            showToast('Theme updated successfully', 'success');
+        });
+    });
+
+    // Set initial theme from localStorage
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    applyTheme(savedTheme);
+
+    // Listen for storage events to sync across tabs
+    window.addEventListener('storage', function(e) {
+        if (e.key === 'theme') {
+            applyTheme(e.newValue || 'light');
+        }
+    });
+
+    // Function to update employee status
+    function updateEmployeeStatus(isActive) {
+        if (employeeStatusToggle && employeeStatusBadge) {
+            employeeStatusToggle.checked = isActive;
+            statusText.textContent = isActive ? 'Active' : 'Inactive';
+            const badge = employeeStatusBadge.querySelector('.badge');
+            badge.className = `badge ${isActive ? 'bg-success' : 'bg-danger'}`;
+            badge.textContent = isActive ? 'Active' : 'Inactive';
         }
     }
 
-    // Apply initial theme
-    applyTheme('{{ preferences.theme }}');
+    // Employee status toggle
+    if (employeeStatusToggle && employeeStatusBadge) {
+        // Set initial state from localStorage
+        const savedStatus = localStorage.getItem('employeeStatus') === 'active';
+        updateEmployeeStatus(savedStatus);
+
+        employeeStatusToggle.addEventListener('change', function() {
+            const isActive = this.checked;
+            updateEmployeeStatus(isActive);
+            localStorage.setItem('employeeStatus', isActive ? 'active' : 'inactive');
+            showToast('Employee status updated successfully', 'success');
+        });
+    }
+
+    // Listen for employee status changes in other tabs
+    window.addEventListener('storage', function(e) {
+        if (e.key === 'employeeStatus') {
+            updateEmployeeStatus(e.newValue === 'active');
+        }
+    });
+
+    // Re-apply theme after dynamic content changes
+    const observer = new MutationObserver(function(mutations) {
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        mutations.forEach(function(mutation) {
+            if (mutation.addedNodes.length) {
+                mutation.addedNodes.forEach(node => {
+                    if (node.nodeType === 1) { // Element node
+                        node.setAttribute('data-bs-theme', currentTheme);
+                    }
+                });
+            }
+        });
+    });
+
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true
+    });
+
+    // Function to get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    
+    function showToast(message, type) {
+        const toast = document.createElement('div');
+        toast.className = `alert alert-${type} position-fixed bottom-0 end-0 m-3`;
+        toast.style.zIndex = '1050';
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
 });
 </script>
 {% endblock %}
