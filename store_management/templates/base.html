@@ -1,0 +1,639 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="h-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon/favicon.png' %}">
+    <link rel="shortcut icon" type="image/x-icon" href="{% static 'favicon/favicon.png' %}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'favicon/favicon.png' %}">
+
+    <title>{% block title %}Store Management System{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            /* Base colors */
+            --primary-color: #4e73df;
+            --secondary-color: #858796;
+            --success-color: #1cc88a;
+            --info-color: #36b9cc;
+            --warning-color: #f6c23e;
+            --danger-color: #e74a3b;
+            
+            /* Theme specific variables */
+            --bg-primary: #f8f9fc;
+            --bg-secondary: #ffffff;
+            --text-primary: #5a5c69;
+            --text-secondary: #858796;
+            --border-color: #e3e6f0;
+            --input-bg: #ffffff;
+            --card-bg: #ffffff;
+            --navbar-bg: var(--primary-color);
+            --navbar-text: #ffffff;
+        }
+
+        /* Dark Theme */
+        body.theme-dark {
+            --bg-primary: #1a1c24;
+            --bg-secondary: #242631;
+            --text-primary: #ffffff;
+            --text-secondary: #b7b9cc;
+            --border-color: #373b47;
+            --input-bg: #2e3139;
+            --card-bg: #242631;
+            --navbar-bg: #242631;
+            --navbar-text: #ffffff;
+        }
+
+        /* Global Styles */
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* Card Styles */
+        .card {
+            background-color: var(--card-bg);
+            border-color: var(--border-color);
+        }
+
+        /* Form Controls */
+        .form-control {
+            background-color: var(--input-bg);
+            border-color: var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .form-control:focus {
+            background-color: var(--input-bg);
+            color: var(--text-primary);
+        }
+
+        /* Tables */
+        .table {
+            color: var(--text-primary);
+        }
+
+        .table td, .table th {
+            border-color: var(--border-color);
+        }
+
+        /* Navbar */
+        .navbar {
+            background-color: var(--navbar-bg) !important;
+        }
+
+        .navbar-dark .navbar-nav .nav-link {
+            color: var(--navbar-text);
+        }
+
+        /* Dropdowns */
+        .dropdown-menu {
+            background-color: var(--card-bg);
+            border-color: var(--border-color);
+        }
+
+        .dropdown-item {
+            color: var(--text-primary);
+        }
+
+        .dropdown-item:hover {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+        }
+
+        /* Modal */
+        .modal-content {
+            background-color: var(--card-bg);
+            color: var(--text-primary);
+        }
+
+        .modal-header, .modal-footer {
+            border-color: var(--border-color);
+        }
+
+        /* Footer */
+        .footer {
+            background-color: var(--card-bg);
+            color: var(--text-primary);
+            border-top: 1px solid var(--border-color);
+            padding: 1rem 0;
+            margin-top: 2rem;
+        }
+
+        .content-wrapper {
+            flex: 1 0 auto;
+        }
+
+        /* Product Cards in Sales Page */
+        .product-card {
+            background-color: #242631 !important;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .product-card:hover {
+            background-color: #2f3241 !important;
+            transform: translateY(-2px);
+        }
+
+        .product-card h5,
+        .product-card .price {
+            color: #ffffff !important;
+        }
+
+        .product-card .text-muted {
+            color: #b7b9cc !important;
+        }
+
+        /* Product search input in sales page */
+        #productsSearch {
+            background-color: #1a1c24;
+            color: #ffffff;
+            border-color: var(--border-color);
+        }
+
+        #productsSearch:focus {
+            background-color: #1a1c24;
+            border-color: var(--primary-color);
+        }
+
+        #productsSearch::placeholder {
+            color: #b7b9cc;
+        }
+
+        /* Stock text color */
+        .products-list .text-muted {
+            color: #b7b9cc !important;
+        }
+
+        /* Product price */
+        .products-list .card .h5 {
+            color: var(--text-primary);
+        }
+
+        /* Products section title */
+        .products-list .h4 {
+            color: var(--text-primary);
+        }
+
+        /* Dark Theme Styles */
+        body.theme-dark {
+            --bg-primary: #1a1c24;
+            --bg-secondary: #242631;
+            --text-primary: #ffffff;
+            --text-secondary: #b7b9cc;
+            --border-color: #373b47;
+            --input-bg: #2e3139;
+            --card-bg: #242631;
+            --navbar-bg: #242631;
+            --navbar-text: #ffffff;
+        }
+
+        body.theme-dark .list-group-item {
+            background-color: #242631;
+            border-color: var(--border-color);
+            color: #ffffff;
+        }
+
+        body.theme-dark .list-group-item:hover {
+            background-color: #2f3241;
+        }
+
+        body.theme-dark .list-group-item h6,
+        body.theme-dark .list-group-item .fw-bold {
+            color: #ffffff;
+        }
+
+        body.theme-dark .text-muted,
+        body.theme-dark small.text-muted {
+            color: #b7b9cc !important;
+        }
+
+        body.theme-dark .form-control {
+            background-color: #1a1c24;
+            border-color: var(--border-color);
+            color: #ffffff;
+        }
+
+        body.theme-dark .form-control:focus {
+            background-color: #1a1c24;
+            border-color: var(--primary-color);
+            color: #ffffff;
+        }
+
+        body.theme-dark .form-control::placeholder {
+            color: #b7b9cc;
+        }
+
+        body.theme-dark .form-select {
+            background-color: #1a1c24;
+            border-color: var(--border-color);
+            color: #ffffff;
+        }
+
+        body.theme-dark .table {
+            color: #ffffff;
+        }
+
+        body.theme-dark .table td,
+        body.theme-dark .table th {
+            border-color: var(--border-color);
+        }
+
+        body.theme-dark .modal-content {
+            background-color: var(--bg-secondary);
+            color: #ffffff;
+        }
+
+        body.theme-dark .modal-header,
+        body.theme-dark .modal-footer {
+            border-color: var(--border-color);
+        }
+
+        body.theme-dark .btn-close {
+            filter: invert(1) grayscale(100%) brightness(200%);
+        }
+
+        body.theme-dark .sales-card {
+            background-color: var(--bg-secondary);
+            border-color: var(--border-color);
+        }
+
+        body.theme-dark .card-header:not(.bg-primary) {
+            background-color: var(--bg-secondary);
+            border-color: var(--border-color);
+            color: #ffffff;
+        }
+
+        body.theme-dark .form-label {
+            color: #ffffff;
+        }
+
+        body.theme-dark h1, 
+        body.theme-dark h2, 
+        body.theme-dark h3, 
+        body.theme-dark h4, 
+        body.theme-dark h5, 
+        body.theme-dark h6,
+        body.theme-dark .h1, 
+        body.theme-dark .h2, 
+        body.theme-dark .h3, 
+        body.theme-dark .h4, 
+        body.theme-dark .h5, 
+        body.theme-dark .h6 {
+            color: #ffffff;
+        }
+
+        /* Dark Theme Sales Table */
+        body.theme-dark .table {
+            color: #ffffff !important;
+        }
+
+        body.theme-dark .table th,
+        body.theme-dark .table td {
+            color: #ffffff !important;
+            border-color: var(--border-color);
+        }
+
+        body.theme-dark .table thead th {
+            background-color: var(--bg-secondary);
+            color: #ffffff !important;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        body.theme-dark .table tbody tr {
+            background-color: var(--bg-secondary);
+        }
+
+        body.theme-dark .table tbody tr:hover {
+            background-color: #2f3241;
+        }
+
+        /* Sales Card Specific */
+        body.theme-dark .sales-card {
+            background-color: var(--bg-secondary);
+        }
+
+        body.theme-dark .sales-card .card-header {
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        body.theme-dark .sales-card .card-body {
+            background-color: var(--bg-secondary);
+        }
+
+        /* Recent Sales Section */
+        body.theme-dark .recent-sales h5,
+        body.theme-dark .recent-sales .h5,
+        body.theme-dark .recent-sales span,
+        body.theme-dark .recent-sales div {
+            color: #ffffff !important;
+        }
+
+        /* All text elements in dark mode */
+        body.theme-dark * {
+            color: #ffffff;
+        }
+
+        body.theme-dark .text-muted,
+        body.theme-dark .text-secondary {
+            color: #b7b9cc !important;
+        }
+
+        /* Ensure form elements are properly colored */
+        body.theme-dark input,
+        body.theme-dark select,
+        body.theme-dark textarea {
+            color: #ffffff !important;
+            background-color: #1a1c24 !important;
+        }
+
+        /* Table header and content */
+        body.theme-dark th,
+        body.theme-dark td {
+            color: #ffffff !important;
+        }
+
+        /* Customer and Employee names */
+        body.theme-dark .table td a,
+        body.theme-dark .table td span {
+            color: #ffffff !important;
+        }
+
+        /* Amount values */
+        body.theme-dark .table td[data-amount],
+        body.theme-dark .table td strong {
+            color: #ffffff !important;
+        }
+
+        /* Dashboard Tabs in Dark Mode */
+        body.theme-dark .nav-tabs {
+            border-bottom-color: var(--border-color);
+        }
+
+        body.theme-dark .nav-tabs .nav-link {
+            color: #b7b9cc;
+            background-color: #1a1c24;
+            border-color: var(--border-color);
+        }
+
+        body.theme-dark .nav-tabs .nav-link:hover {
+            background-color: #2f3241;
+            border-color: var(--border-color);
+            color: #ffffff;
+        }
+
+        body.theme-dark .nav-tabs .nav-link.active {
+            color: #ffffff;
+            background-color: #242631;
+            border-color: var(--border-color);
+            border-bottom-color: #242631;
+        }
+
+        /* Chart container in dark mode */
+        body.theme-dark .chart-container {
+            background-color: var(--bg-secondary);
+        }
+
+        /* Sales Overview Modal in Dark Mode */
+        body.theme-dark .modal-header .btn-close {
+            background-color: transparent;
+            filter: invert(1) grayscale(100%) brightness(200%);
+        }
+
+        body.theme-dark .nav-tabs-container {
+            background-color: var(--bg-secondary);
+            padding: 1rem;
+            border-radius: 0.5rem;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'dashboard' %}">
+                <img src="{% static 'images/logo.png' %}" alt="Store Management Logo" height="30" class="d-inline-block align-text-top me-2">
+                Store Management
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                {% if user.is_authenticated %}
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'dashboard' %}">
+                            <i class="fas fa-chart-line"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if user.employee.role not in 'MANAGER,STOCK_CLERK' %}restricted-link{% endif %}" 
+                           href="{% if user.employee.role in 'MANAGER,STOCK_CLERK' %}{% url 'product_list' %}{% else %}#{% endif %}"
+                           data-restricted="{% if user.employee.role not in 'MANAGER,STOCK_CLERK' %}true{% endif %}"
+                           data-feature="Products">
+                            <i class="fas fa-box"></i> Products
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if user.employee.role not in 'MANAGER,STOCK_CLERK' %}restricted-link{% endif %}" 
+                           href="{% if user.employee.role in 'MANAGER,STOCK_CLERK' %}{% url 'inventory' %}{% else %}#{% endif %}"
+                           data-restricted="{% if user.employee.role not in 'MANAGER,STOCK_CLERK' %}true{% endif %}"
+                           data-feature="Inventory">
+                            <i class="fas fa-warehouse"></i> Inventory
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if user.employee.role not in 'MANAGER,STOCK_CLERK' %}restricted-link{% endif %}" 
+                           href="{% if user.employee.role in 'MANAGER,STOCK_CLERK' %}{% url 'purchase_orders' %}{% else %}#{% endif %}"
+                           data-restricted="{% if user.employee.role not in 'MANAGER,STOCK_CLERK' %}true{% endif %}"
+                           data-feature="Purchase Orders">
+                            <i class="fas fa-shopping-cart"></i> Purchase Orders
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if user.employee.role not in 'MANAGER,CASHIER,SALES_ASSOCIATE' %}restricted-link{% endif %}" 
+                           href="{% if user.employee.role in 'MANAGER,CASHIER,SALES_ASSOCIATE' %}{% url 'sales' %}{% else %}#{% endif %}"
+                           data-restricted="{% if user.employee.role not in 'MANAGER,CASHIER,SALES_ASSOCIATE' %}true{% endif %}"
+                           data-feature="Sales">
+                            <i class="fas fa-shopping-cart"></i> Sales
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if user.employee.role not in 'MANAGER,CASHIER,SALES_ASSOCIATE' %}restricted-link{% endif %}" 
+                           href="{% if user.employee.role in 'MANAGER,CASHIER,SALES_ASSOCIATE' %}{% url 'customer_list' %}{% else %}#{% endif %}"
+                           data-restricted="{% if user.employee.role not in 'MANAGER,CASHIER,SALES_ASSOCIATE' %}true{% endif %}"
+                           data-feature="Customers">
+                            <i class="fas fa-users"></i> Customers
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if user.employee.role != 'MANAGER' %}restricted-link{% endif %}" 
+                           href="{% if user.employee.role == 'MANAGER' %}{% url 'supplier_list' %}{% else %}#{% endif %}"
+                           data-restricted="{% if user.employee.role != 'MANAGER' %}true{% endif %}"
+                           data-feature="Suppliers">
+                            <i class="fas fa-truck"></i> Suppliers
+                        </a>
+                    </li>
+                    {% if user.employee.role == 'MANAGER' %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'employee_list' %}">
+                            <i class="fas fa-user-tie"></i> Employees
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user"></i> {{ user.get_full_name|default:user.username }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="{% url 'profile' %}"><i class="fas fa-id-card"></i> Profile</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <button type="button" class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#logoutModal">
+                                    <i class="fas fa-sign-out-alt"></i> Logout
+                                </button>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="content-wrapper">
+        <div class="container mt-4">
+            {% if messages %}
+                {% for message in messages %}
+                <div class="modal fade message-modal" tabindex="-1" data-message-type="{{ message.tags }}">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header bg-{{ message.tags }}">
+                                <h5 class="modal-title text-white">
+                                    {% if message.tags == 'success' %}
+                                        <i class="fas fa-check-circle"></i> Success
+                                    {% elif message.tags == 'error' %}
+                                        <i class="fas fa-exclamation-circle"></i> Error
+                                    {% elif message.tags == 'warning' %}
+                                        <i class="fas fa-exclamation-triangle"></i> Warning
+                                    {% elif message.tags == 'info' %}
+                                        <i class="fas fa-info-circle"></i> Information
+                                    {% endif %}
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p class="mb-0">{{ message }}</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% endif %}
+
+            {% block content %}
+            {% endblock %}
+
+            <!-- Logout Confirmation Modal -->
+            <div class="modal fade" id="logoutModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-xl">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Confirm Logout</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body text-center">
+                            <img src="{% static 'images/sad.jpg' %}" alt="Sad Face" class="mb-3 img-fluid" style="width: 1000px;">
+                            <h4>Are you sure you want to log out?</h4>
+                            <form method="post" action="{% url 'logout' %}" class="mt-4">
+                                {% csrf_token %}
+                                <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-danger">Yes, Log Out</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Permission Warning Modal -->
+            <div class="modal fade" id="permissionModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header bg-warning">
+                            <h5 class="modal-title">
+                                <i class="fas fa-exclamation-triangle"></i> Access Restricted
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Sorry, you don't have permission to access <strong id="restrictedFeature"></strong>.</p>
+                            <p>This feature is only available to specific roles. Please contact your manager if you need access.</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container text-center">
+            <span class="text-muted"> Store Management System. All rights reserved.</span>
+        </div>
+    </footer>
+
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Custom JavaScript -->
+    <script src="{% static 'js/theme.js' %}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Show message modals if they exist
+            document.querySelectorAll('.message-modal').forEach(modalEl => {
+                const modal = new bootstrap.Modal(modalEl);
+                modal.show();
+            });
+
+            // Get all restricted links
+            const restrictedLinks = document.querySelectorAll('.restricted-link');
+            const permissionModal = new bootstrap.Modal(document.getElementById('permissionModal'));
+            
+            // Add click event listener to each restricted link
+            restrictedLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    if (this.dataset.restricted === 'true') {
+                        e.preventDefault();
+                        document.getElementById('restrictedFeature').textContent = this.dataset.feature;
+                        permissionModal.show();
+                    }
+                });
+            });
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

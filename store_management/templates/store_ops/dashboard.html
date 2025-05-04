@@ -1,0 +1,942 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - Store Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+        --success-gradient: linear-gradient(135deg, #1cc88a 0%, #13855c 100%);
+        --info-gradient: linear-gradient(135deg, #36b9cc 0%, #258391 100%);
+        --warning-gradient: linear-gradient(135deg, #f6c23e 0%, #dda20a 100%);
+    }
+
+    .dashboard-header {
+        background: var(--primary-gradient);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+    }
+
+    .card-dashboard {
+        border: none;
+        border-radius: 15px;
+        transition: all 0.3s ease;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-dashboard:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-dashboard.bg-primary {
+        background: var(--primary-gradient) !important;
+    }
+
+    .card-dashboard.bg-success {
+        background: var(--success-gradient) !important;
+    }
+
+    .card-dashboard.bg-info {
+        background: var(--info-gradient) !important;
+    }
+
+    .card-dashboard.bg-warning {
+        background: var(--warning-gradient) !important;
+    }
+
+    .card-body {
+        padding: 1.5rem;
+    }
+
+    .card-title {
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+    }
+
+    .card-text {
+        font-family: 'Roboto Mono', monospace;
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .table {
+        margin-bottom: 0;
+    }
+
+    .table th {
+        border-top: none;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        color: #666;
+    }
+
+    .table td {
+        vertical-align: middle;
+        font-size: 0.9rem;
+    }
+
+    .badge {
+        padding: 0.5em 1em;
+        font-weight: 500;
+        border-radius: 30px;
+    }
+
+    .list-group-item {
+        border: none;
+        border-radius: 10px;
+        margin-bottom: 0.5rem;
+        transition: all 0.2s ease;
+    }
+
+    .list-group-item:hover {
+        background-color: #f8f9fa;
+        transform: translateX(5px);
+    }
+
+    .modal-content {
+        border: none;
+        border-radius: 15px;
+        overflow: hidden;
+    }
+
+    .modal-header {
+        background: var(--primary-gradient);
+        color: white;
+        border-bottom: none;
+        padding: 1.5rem;
+    }
+
+    .modal-title {
+        font-weight: 600;
+    }
+
+    .btn-close {
+        filter: brightness(0) invert(1);
+    }
+
+    .modal-body {
+        padding: 1.5rem;
+    }
+
+    .sales-chart-container {
+        background: #fff;
+        border-radius: 15px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        height: 300px;
+    }
+
+    /* Animation classes */
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .animate-in {
+        animation: slideIn 0.3s ease forwards;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1 class="h3 mb-0">Dashboard</h1>
+</div>
+
+<!-- Quick Stats -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card card-dashboard bg-primary" style="cursor: pointer;" data-bs-toggle="modal"
+            data-bs-target="#salesModal">
+            <div class="card-body">
+                <h5 class="card-title">Total Sales</h5>
+                <h2 class="card-text">${{ total_sales_today }}</h2>
+                <p class="mb-0">
+                    <small>{{ sales_count_today }} transactions</small>
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card card-dashboard bg-success" style="cursor: pointer;" data-bs-toggle="modal"
+            data-bs-target="#productsModal">
+            <div class="card-body">
+                <h5 class="card-title">Products in Stock</h5>
+                <h2 class="card-text">{{ total_products }}</h2>
+                <p class="mb-0">
+                    <small>{{ low_stock_count }} low stock items</small>
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card card-dashboard bg-info" style="cursor: pointer;" data-bs-toggle="modal"
+            data-bs-target="#customersModal">
+            <div class="card-body">
+                <h5 class="card-title">Total Customers</h5>
+                <h2 class="card-text">{{ total_customers }}</h2>
+                <p class="mb-0">
+                    <small>{{ new_customers_today }} new today</small>
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card card-dashboard bg-warning" style="cursor: pointer;" data-bs-toggle="modal"
+            data-bs-target="#ordersModal">
+            <div class="card-body">
+                <h5 class="card-title">Pending Orders</h5>
+                <h2 class="card-text">{{ pending_orders }}</h2>
+                <p class="mb-0">
+                    <small>{{ orders_today }} orders today</small>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Sales -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Recent Sales</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Invoice</th>
+                                <th>Customer</th>
+                                <th>Amount</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sale in recent_sales %}
+                            <tr>
+                                <td>#{{ sale.id }}</td>
+                                <td>{{ sale.customer.get_full_name|default:"Walk-in Customer" }}</td>
+                                <td>${{ sale.total_amount }}</td>
+                                <td>{{ sale.sale_date|date:"M d, Y H:i" }}</td>
+                                <td>
+                                    <span class="badge bg-success">Completed</span>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center">No recent sales</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Low Stock Alert -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Low Stock Alert</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    {% for product in low_stock_products %}
+                    <a href="{% url 'product_detail' product.id %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ product.name }}</h6>
+                            <small class="text-danger">{{ product.stock_quantity }} left</small>
+                        </div>
+                        <small>Reorder Level: {{ product.reorder_level }}</small>
+                    </a>
+                    {% empty %}
+                    <p class="text-center mb-0">No products are low in stock</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sales Modal -->
+<div class="modal fade" id="salesModal" tabindex="-1" aria-labelledby="salesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="salesModalLabel">Sales Overview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-4">
+                    <!-- Sales Summary Cards -->
+                    <div class="col-md-6 col-lg-3">
+                        <div class="card bg-primary text-white h-100">
+                            <div class="card-body">
+                                <h6 class="card-title">Today's Sales</h6>
+                                <h3 class="mb-2">${{ total_sales_today }}</h3>
+                                <p class="mb-0"><small>{{ sales_count_today }} transactions</small></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <div class="card bg-success text-white h-100">
+                            <div class="card-body">
+                                <h6 class="card-title">Monthly Sales</h6>
+                                <h3 class="mb-2">${{ total_sales_month }}</h3>
+                                <p class="mb-0"><small>{{ sales_count_month }} transactions</small></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <div class="card bg-info text-white h-100">
+                            <div class="card-body">
+                                <h6 class="card-title">Quarterly Sales</h6>
+                                <h3 class="mb-2">${{ total_sales_quarter }}</h3>
+                                <p class="mb-0"><small>{{ sales_count_quarter }} transactions</small></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <div class="card bg-warning text-white h-100">
+                            <div class="card-body">
+                                <h6 class="card-title">Yearly Sales</h6>
+                                <h3 class="mb-2">${{ total_sales_year }}</h3>
+                                <p class="mb-0"><small>{{ sales_count_year }} transactions</small></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sales Charts -->
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <ul class="nav nav-tabs" id="salesChartTabs" role="tablist">
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link active" id="daily-tab" data-bs-toggle="tab"
+                                            data-bs-target="#daily" type="button" role="tab">Daily</button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link" id="monthly-tab" data-bs-toggle="tab"
+                                            data-bs-target="#monthly" type="button" role="tab">Monthly</button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link" id="quarterly-tab" data-bs-toggle="tab"
+                                            data-bs-target="#quarterly" type="button" role="tab">Quarterly</button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link" id="yearly-tab" data-bs-toggle="tab"
+                                            data-bs-target="#yearly" type="button" role="tab">Yearly</button>
+                                    </li>
+                                </ul>
+                                <div class="tab-content mt-3" id="salesChartContent">
+                                    <div class="tab-pane fade show active" id="daily" role="tabpanel">
+                                        <canvas id="dailySalesChart" height="300"></canvas>
+                                    </div>
+                                    <div class="tab-pane fade" id="monthly" role="tabpanel">
+                                        <canvas id="monthlySalesChart" height="300"></canvas>
+                                    </div>
+                                    <div class="tab-pane fade" id="quarterly" role="tabpanel">
+                                        <canvas id="quarterlySalesChart" height="300"></canvas>
+                                    </div>
+                                    <div class="tab-pane fade" id="yearly" role="tabpanel">
+                                        <canvas id="yearlySalesChart" height="300"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Products Modal -->
+<div class="modal fade" id="productsModal" tabindex="-1" aria-labelledby="productsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="productsModalLabel">Products Overview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Most Popular Products</h6>
+                        <ul class="list-group">
+                            {% for product in popular_products %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ product.product__name }}
+                                <span class="badge bg-primary rounded-pill">${{ product.total_sales|floatformat:2}}</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Least Popular Products</h6>
+                        <ul class="list-group">
+                            {% for product in least_popular_products %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ product.product__name }}
+                                <span class="badge bg-secondary rounded-pill">${{ product.total_sales|floatformat:2}}</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <canvas id="popularProductsChart"></canvas>
+                    </div>
+                    <div class="col-md-6">
+                        <canvas id="leastPopularProductsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Customers Modal -->
+<div class="modal fade" id="customersModal" tabindex="-1" aria-labelledby="customersModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="customersModalLabel">Customer Loyalty Overview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Most Loyal Customers</h6>
+                        <ul class="list-group">
+                            {% for customer in loyal_customers %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ customer.first_name }} {{ customer.last_name }}
+                                <span class="badge bg-primary rounded-pill">{{ customer.loyalty_points }} points</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Least Loyal Customers</h6>
+                        <ul class="list-group">
+                            {% for customer in least_loyal_customers %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ customer.first_name }} {{ customer.last_name }}
+                                <span class="badge bg-secondary rounded-pill">{{ customer.loyalty_points }}
+                                    points</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <canvas id="loyalCustomersChart"></canvas>
+                    </div>
+                    <div class="col-md-6">
+                        <canvas id="leastLoyalCustomersChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Orders Modal -->
+<div class="modal fade" id="ordersModal" tabindex="-1" aria-labelledby="ordersModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="ordersModalLabel">Orders Overview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="list-group">
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        Pending Orders
+                        <span class="badge bg-warning rounded-pill">{{ pending_orders }}</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        Received Orders
+                        <span class="badge bg-success rounded-pill">{{ received_orders }}</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        Cancelled Orders
+                        <span class="badge bg-danger rounded-pill">{{ cancelled_orders }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sales Chart -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Sales Overview</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="salesChart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Sales Charts Initialization
+        let salesCharts = {};
+
+        function initializeSalesCharts() {
+            // Parse the sales data from Django template
+            const salesDates = JSON.parse('{{ dates|safe|escapejs }}');
+            const salesValues = JSON.parse('{{ sales_data|safe|escapejs }}');
+
+            // Daily Sales Chart
+            const dailyCtx = document.getElementById('dailySalesChart').getContext('2d');
+            salesCharts.daily = new Chart(dailyCtx, {
+                type: 'line',
+                data: {
+                    labels: salesDates.slice(-30), // Last 30 days
+                    datasets: [{
+                        label: 'Daily Sales ($)',
+                        data: salesValues.slice(-30),
+                        borderColor: 'rgb(54, 162, 235)',
+                        backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Daily Sales - Last 30 Days'
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function (value) {
+                                    return '$' + value;
+                                }
+                            }
+                        }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    }
+                }
+            });
+
+            // Monthly Sales Chart
+            const monthlyCtx = document.getElementById('monthlySalesChart').getContext('2d');
+            // Group daily data into monthly
+            const monthlyData = groupDataByMonth(salesDates, salesValues);
+
+            salesCharts.monthly = new Chart(monthlyCtx, {
+                type: 'bar',
+                data: {
+                    labels: monthlyData.labels,
+                    datasets: [{
+                        label: 'Monthly Sales ($)',
+                        data: monthlyData.values,
+                        backgroundColor: 'rgba(75, 192, 192, 0.8)',
+                        borderColor: 'rgb(75, 192, 192)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Monthly Sales Overview'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function (value) {
+                                    return '$' + value;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Initialize quarterly sales chart
+            const quarterlyData = groupDataByQuarter(salesDates, salesValues);
+            salesCharts.quarterly = new Chart(document.getElementById('quarterlySalesChart'), {
+                type: 'bar',
+                data: {
+                    labels: quarterlyData.labels,
+                    datasets: [{
+                        label: 'Quarterly Sales',
+                        data: quarterlyData.values,
+                        backgroundColor: 'rgba(54, 185, 204, 0.5)',
+                        borderColor: 'rgb(54, 185, 204)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function (value) {
+                                    return '$' + value.toLocaleString();
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return '$' + context.parsed.y.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Yearly Sales Chart
+            const yearlyCtx = document.getElementById('yearlySalesChart').getContext('2d');
+            // Group daily data into yearly
+            const yearlyData = groupDataByYear(salesDates, salesValues);
+
+            salesCharts.yearly = new Chart(yearlyCtx, {
+                type: 'bar',
+                data: {
+                    labels: yearlyData.labels,
+                    datasets: [{
+                        label: 'Yearly Sales ($)',
+                        data: yearlyData.values,
+                        backgroundColor: 'rgba(153, 102, 255, 0.8)',
+                        borderColor: 'rgb(153, 102, 255)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Yearly Sales Overview'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function (value) {
+                                    return '$' + value;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Helper function to group data by month
+        function groupDataByMonth(dates, values) {
+            const monthlyData = {};
+            dates.forEach((date, index) => {
+                const monthYear = date.substring(0, 7); // Get YYYY-MM
+                monthlyData[monthYear] = (monthlyData[monthYear] || 0) + values[index];
+            });
+
+            return {
+                labels: Object.keys(monthlyData),
+                values: Object.values(monthlyData)
+            };
+        }
+
+        function groupDataByQuarter(dates, values) {
+            const quarterlyData = {};
+            dates.forEach((date, index) => {
+                const d = new Date(date);
+                const quarter = Math.floor(d.getMonth() / 3) + 1;
+                const year = d.getFullYear();
+                const key = `Q${quarter} ${year}`;
+                if (!quarterlyData[key]) {
+                    quarterlyData[key] = 0;
+                }
+                quarterlyData[key] += values[index];
+            });
+            return {
+                labels: Object.keys(quarterlyData),
+                values: Object.values(quarterlyData)
+            };
+        }
+
+        // Helper function to group data by year
+        function groupDataByYear(dates, values) {
+            const yearlyData = {};
+            dates.forEach((date, index) => {
+                const year = date.substring(0, 4); // Get YYYY
+                yearlyData[year] = (yearlyData[year] || 0) + values[index];
+            });
+
+            return {
+                labels: Object.keys(yearlyData),
+                values: Object.values(yearlyData)
+            };
+        }
+
+        // Initialize sales charts when modal is shown
+        document.getElementById('salesModal').addEventListener('shown.bs.modal', function () {
+            if (!salesCharts.daily) {
+                initializeSalesCharts();
+            }
+        });
+
+        // Handle tab changes
+        document.querySelectorAll('button[data-bs-toggle="tab"]').forEach(tab => {
+            tab.addEventListener('shown.bs.tab', function (event) {
+                const targetId = event.target.getAttribute('data-bs-target').substring(1);
+                const chart = salesCharts[targetId];
+                if (chart) {
+                    chart.resize();
+                }
+            });
+        });
+
+        // Initialize main sales chart
+        var ctx = document.getElementById('salesChart').getContext('2d');
+        var salesDates = JSON.parse('{{ dates|safe|escapejs }}');
+        var salesValues = JSON.parse('{{ sales_data|safe|escapejs }}');
+
+        var salesChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: salesDates,
+                datasets: [{
+                    label: 'Sales',
+                    data: salesValues,
+                    borderColor: 'rgb(75, 192, 192)',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // Initialize products charts
+        function initializeProductCharts() {
+            const popularProductsCtx = document.getElementById('popularProductsChart').getContext('2d');
+            const leastPopularProductsCtx = document.getElementById('leastPopularProductsChart').getContext('2d');
+
+            // Extract data from the DOM for popular products
+            const popularProducts = [];
+            const popularProductsSales = [];
+            document.querySelectorAll('#productsModal .col-md-6:first-child .list-group-item').forEach(item => {
+                popularProducts.push(item.childNodes[0].textContent.trim());
+                popularProductsSales.push(parseFloat(item.querySelector('.badge').textContent.replace('$', '')));
+            });
+
+            // Extract data from the DOM for least popular products
+            const leastPopularProducts = [];
+            const leastPopularProductsSales = [];
+            document.querySelectorAll('#productsModal .col-md-6:last-child .list-group-item').forEach(item => {
+                leastPopularProducts.push(item.childNodes[0].textContent.trim());
+                leastPopularProductsSales.push(parseFloat(item.querySelector('.badge').textContent.replace('$', '')));
+            });
+
+            // Create popular products chart
+            new Chart(popularProductsCtx, {
+                type: 'bar',
+                data: {
+                    labels: popularProducts,
+                    datasets: [{
+                        label: 'Sales Amount ($)',
+                        data: popularProductsSales,
+                        backgroundColor: 'rgba(54, 162, 235, 0.8)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Most Popular Products by Sales'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // Create least popular products chart
+            new Chart(leastPopularProductsCtx, {
+                type: 'bar',
+                data: {
+                    labels: leastPopularProducts,
+                    datasets: [{
+                        label: 'Sales Amount ($)',
+                        data: leastPopularProductsSales,
+                        backgroundColor: 'rgba(255, 99, 132, 0.8)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Least Popular Products by Sales'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize customers charts
+        function initializeCustomerCharts() {
+            const loyalCustomersCtx = document.getElementById('loyalCustomersChart').getContext('2d');
+            const leastLoyalCustomersCtx = document.getElementById('leastLoyalCustomersChart').getContext('2d');
+
+            // Extract data from the DOM for loyal customers
+            const loyalCustomers = [];
+            const loyalCustomersPoints = [];
+            document.querySelectorAll('#customersModal .col-md-6:first-child .list-group-item').forEach(item => {
+                loyalCustomers.push(item.childNodes[0].textContent.trim());
+                loyalCustomersPoints.push(parseInt(item.querySelector('.badge').textContent));
+            });
+
+            // Extract data from the DOM for least loyal customers
+            const leastLoyalCustomers = [];
+            const leastLoyalCustomersPoints = [];
+            document.querySelectorAll('#customersModal .col-md-6:last-child .list-group-item').forEach(item => {
+                leastLoyalCustomers.push(item.childNodes[0].textContent.trim());
+                leastLoyalCustomersPoints.push(parseInt(item.querySelector('.badge').textContent));
+            });
+
+            // Create loyal customers chart
+            new Chart(loyalCustomersCtx, {
+                type: 'bar',
+                data: {
+                    labels: loyalCustomers,
+                    datasets: [{
+                        label: 'Loyalty Points',
+                        data: loyalCustomersPoints,
+                        backgroundColor: 'rgba(75, 192, 192, 0.8)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Most Loyal Customers by Points'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // Create least loyal customers chart
+            new Chart(leastLoyalCustomersCtx, {
+                type: 'bar',
+                data: {
+                    labels: leastLoyalCustomers,
+                    datasets: [{
+                        label: 'Loyalty Points',
+                        data: leastLoyalCustomersPoints,
+                        backgroundColor: 'rgba(153, 102, 255, 0.8)',
+                        borderColor: 'rgba(153, 102, 255, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Least Loyal Customers by Points'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize charts when modals are shown
+        document.getElementById('productsModal').addEventListener('shown.bs.modal', function () {
+            initializeProductCharts();
+        });
+
+        document.getElementById('customersModal').addEventListener('shown.bs.modal', function () {
+            initializeCustomerCharts();
+        });
+    });
+</script>
+{% endblock %}

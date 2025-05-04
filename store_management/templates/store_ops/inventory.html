@@ -1,0 +1,435 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Inventory - Store Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .inventory-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .page-header {
+        background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .page-header h1 {
+        color: white !important;
+        margin: 0;
+    }
+
+    .inventory-btn {
+        background-color: rgba(255, 255, 255, 0.2);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        margin-left: 0.5rem;
+    }
+
+    .inventory-btn:hover {
+        background-color: rgba(255, 255, 255, 0.3);
+        border-color: rgba(255, 255, 255, 0.4);
+        color: white;
+    }
+
+    .inventory-btn.success {
+        background-color: rgba(46, 204, 113, 0.2);
+        border-color: rgba(46, 204, 113, 0.3);
+    }
+
+    .inventory-btn.warning {
+        background-color: rgba(243, 156, 18, 0.2);
+        border-color: rgba(243, 156, 18, 0.3);
+    }
+
+    .alert-card {
+        background: rgba(243, 156, 18, 0.1);
+        border: 1px solid rgba(243, 156, 18, 0.2);
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .alert-card h4 {
+        color: #f39c12;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .alert-card ul {
+        margin-top: 1rem;
+        padding-left: 1.5rem;
+    }
+
+    .alert-card li {
+        color: var(--text-color);
+        margin-bottom: 0.5rem;
+    }
+
+    .inventory-card {
+        background: var(--card-bg);
+        border-radius: 15px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+        overflow: hidden;
+    }
+
+    .table {
+        margin-bottom: 0;
+    }
+
+    .table thead th {
+        background-color: rgba(78, 115, 223, 0.1);
+        border-bottom: none;
+        color: var(--text-color);
+        font-weight: 600;
+        padding: 1rem;
+    }
+
+    .table tbody td {
+        padding: 1rem;
+        vertical-align: middle;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .table tbody tr:hover {
+        background-color: rgba(78, 115, 223, 0.05);
+    }
+
+    .stock-badge {
+        padding: 0.5em 1em;
+        font-weight: 500;
+        border-radius: 6px;
+    }
+
+    .stock-badge.low {
+        background-color: rgba(231, 76, 60, 0.1);
+        color: #e74c3c;
+        border: 1px solid #e74c3c;
+    }
+
+    .stock-badge.good {
+        background-color: rgba(46, 204, 113, 0.1);
+        color: #2ecc71;
+        border: 1px solid #2ecc71;
+    }
+
+    .action-btn {
+        padding: 0.375rem 0.75rem;
+        border-radius: 6px;
+        transition: all 0.3s ease;
+    }
+
+    .action-btn:hover {
+        transform: translateY(-2px);
+    }
+
+    .modal-content {
+        border-radius: 15px;
+        border: none;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .modal-header {
+        background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+        color: white;
+        border-radius: 15px 15px 0 0;
+        padding: 1.5rem;
+    }
+
+    .modal-title {
+        color: white;
+        font-weight: 600;
+    }
+
+    .modal-header .btn-close {
+        color: white;
+        opacity: 0.8;
+    }
+
+    .modal-body {
+        padding: 1.5rem;
+    }
+
+    .form-label {
+        font-weight: 500;
+        color: var(--text-color);
+    }
+
+    .form-control, .form-select {
+        border-radius: 8px;
+        padding: 0.75rem;
+        border: 1px solid var(--border-color);
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: #4e73df;
+        box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+    }
+
+    .supplier-name {
+        cursor: help;
+        color: #4e73df;
+        text-decoration: underline dotted;
+    }
+
+    .timestamp {
+        color: var(--secondary-color);
+        font-size: 0.9rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="inventory-container">
+    <div class="page-header">
+        <h1 class="h3 mb-0">Inventory Management</h1>
+        <div>
+            <button class="btn inventory-btn success" data-bs-toggle="modal" data-bs-target="#stockInModal">
+                <i class="fas fa-plus me-2"></i> Stock In
+            </button>
+            <button class="btn inventory-btn warning" data-bs-toggle="modal" data-bs-target="#stockOutModal">
+                <i class="fas fa-minus me-2"></i> Stock Out
+            </button>
+        </div>
+    </div>
+
+    <!-- Low Stock Alert -->
+    {% if low_stock %}
+    <div class="alert-card">
+        <h4><i class="fas fa-exclamation-triangle"></i> Low Stock Alert</h4>
+        <p>The following products are running low on stock:</p>
+        <ul>
+            {% for product in low_stock %}
+            <li>{{ product.name }} - {{ product.stock_quantity }} units remaining (Reorder level: {{ product.reorder_level }})</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <!-- Inventory Table -->
+    <div class="inventory-card">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>SKU</th>
+                        <th>Category</th>
+                        <th>Supplier</th>
+                        <th>Current Stock</th>
+                        <th>Reorder Level</th>
+                        <th>Last Updated</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                    <tr>
+                        <td class="product-name">{{ product.name }}</td>
+                        <td>{{ product.sku }}</td>
+                        <td>{{ product.category.name }}</td>
+                        <td>
+                            <span class="supplier-name" data-bs-toggle="tooltip" data-bs-placement="top" 
+                                  title="{{ product.supplier.description|default:'No description available' }}">
+                                {{ product.supplier.name|default:"Not assigned" }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if product.stock_quantity <= product.reorder_level %}
+                            <span class="stock-badge low">{{ product.stock_quantity }}</span>
+                            {% else %}
+                            <span class="stock-badge good">{{ product.stock_quantity }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ product.reorder_level }}</td>
+                        <td class="timestamp">{{ product.updated_at|date:"M d, Y H:i" }}</td>
+                        <td>
+                            <button class="btn btn-sm btn-info action-btn" data-bs-toggle="modal" 
+                                    data-bs-target="#adjustStockModal{{ product.id }}">
+                                <i class="fas fa-edit"></i> Adjust
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center">No products in inventory</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Stock In Modal -->
+<div class="modal fade" id="stockInModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Stock In</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'stock_in' %}">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="product_in" class="form-label">Product</label>
+                        <select class="form-select" id="product_in" name="product" required onchange="fetchProductDetails(this.value)">
+                            <option value="">Select Product</option>
+                            {% for product in products %}
+                            <option value="{{ product.id }}">{{ product.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="quantity_in" class="form-label">Quantity</label>
+                        <input type="number" class="form-control" id="quantity_in" name="quantity" min="1" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="supplier" class="form-label">Supplier</label>
+                        <input type="text" class="form-control" id="supplier" name="supplier" readonly>
+                        <input type="hidden" id="supplier_id" name="supplier_id">
+                    </div>
+                    <div class="mb-3">
+                        <label for="unit_cost" class="form-label">Unit Cost</label>
+                        <input type="number" class="form-control" id="unit_cost" name="unit_cost" min="0" step="0.01" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="notes_in" class="form-label">Notes</label>
+                        <textarea class="form-control" id="notes_in" name="notes" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">Confirm Stock In</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Stock Out Modal -->
+<div class="modal fade" id="stockOutModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Stock Out</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'stock_out' %}">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="product" class="form-label">Product</label>
+                        <select class="form-select" id="product" name="product" required>
+                            <option value="">Select Product</option>
+                            {% for product in products %}
+                            <option value="{{ product.id }}">{{ product.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="quantity" class="form-label">Quantity</label>
+                        <input type="number" class="form-control" id="quantity" name="quantity" min="1" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="reason" class="form-label">Reason</label>
+                        <textarea class="form-control" id="reason" name="reason" rows="3" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning">Confirm Stock Out</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% for product in products %}
+<!-- Adjust Stock Modal -->
+<div class="modal fade" id="adjustStockModal{{ product.id }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Adjust Stock - {{ product.name }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'adjust_stock' product.id %}">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="current_stock{{ product.id }}" class="form-label">Current Stock</label>
+                        <input type="number" class="form-control" id="current_stock{{ product.id }}" value="{{ product.quantity }}" disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label for="new_stock{{ product.id }}" class="form-label">New Stock Level</label>
+                        <input type="number" class="form-control" id="new_stock{{ product.id }}" name="new_stock" min="0" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="adjustment_reason{{ product.id }}" class="form-label">Reason for Adjustment</label>
+                        <textarea class="form-control" id="adjustment_reason{{ product.id }}" name="reason" rows="3" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function fetchProductDetails(productId) {
+        if (!productId) {
+            document.getElementById('supplier').value = '';
+            document.getElementById('supplier_id').value = '';
+            document.getElementById('unit_cost').value = '';
+            return;
+        }
+
+        const url = `{% url 'get_product_details' 0 %}`.replace('0', productId);
+        console.log('Fetching from URL:', url);
+
+        fetch(url)
+            .then(response => {
+                console.log('Response status:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Received data:', data);
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                document.getElementById('supplier').value = data.supplier_name || '';
+                document.getElementById('supplier_id').value = data.supplier_id || '';
+                document.getElementById('unit_cost').value = data.price || '';
+            })
+            .catch(error => {
+                console.error('Error details:', error);
+                alert(`Error fetching product details: ${error.message}`);
+            });
+    }
+</script>
+{% endblock %}
